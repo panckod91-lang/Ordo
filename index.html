@@ -716,4 +716,345 @@ button, input, select, textarea {
       ],
       movements: [
         { id: 'mv-1', objetoId: 'obj-4', desdeUbicacionId: 'loc-8', haciaUbicacionId: 'loc-11', cantidad: 4, tipoMovimiento: 'mover', detalle: 'Cables USB movidos al taller', fecha: Date.now() - 86400000 },
-        { id: 'mv-2', objetoId: 'obj-2', desdeUbicacionId: null, haciaUbicacionId: 'loc-6', cantidad: 1, tipoMovimiento: 'alta_inicial', detalle: 'Alta in
+        { id: 'mv-2', objetoId: 'obj-2', desdeUbicacionId: null, haciaUbicacionId: 'loc-6', cantidad: 1, tipoMovimiento: 'alta_inicial', detalle: 'Alta inicial de arroz', fecha: Date.now() - 7200000 },
+        { id: 'mv-3', objetoId: 'obj-1', desdeUbicacionId: null, haciaUbicacionId: 'loc-8', cantidad: 20, tipoMovimiento: 'import_csv', detalle: 'Importación CSV', fecha: Date.now() - 3600000 }
+      ]
+    };
+
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onerror = () => reject(request.error);
+        request.onupgradeneeded = () => {
+          const db = request.result;
+          if (!db.objectStoreNames.contains('locations')) db.createObjectStore('locations', { keyPath: 'id' });
+          if (!db.objectStoreNames.contains('objects')) db.createObjectStore('objects', { keyPath: 'id' });
+          if (!db.objectStoreNames.contains('existences')) db.createObjectStore('existences', { keyPath: 'id' });
+          if (!db.objectStoreNames.contains('movements')) db.createObjectStore('movements', { keyPath: 'id' });
+        };
+        request.onsuccess = () => resolve(request.result);
+      });
+    }
+
+    function tx(storeNames, mode = 'readonly') {
+      return state.db.transaction(storeNames, mode);
+    }
+
+    function getAll(store) {
+      return new Promise((resolve, reject) => {
+        const request = tx([store]).objectStore(store).getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function putMany(store, items) {
+      return new Promise((resolve, reject) => {
+        const transaction = tx([store], 'readwrite');
+        const objectStore = transaction.objectStore(store);
+        items.forEach(item => objectStore.put(item));
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+      });
+    }
+
+    async function seedIfEmpty() {
+      const existing = await getAll('objects');
+      if (existing.length) return;
+      await putMany('locations', demo.locations);
+      await putMany('objects', demo.objects);
+      await putMany('existences', demo.existences);
+      await putMany('movements', demo.movements);
+    }
+
+    function formatPath(locationId, allLocations) {
+      const byId = Object.fromEntries(allLocations.map(l => [l.id, l]));
+      const parts = [];
+      let current = byId[locationId];
+      while (current) {
+        parts.unshift(current.nombre);
+        current = current.parentId ? byId[current.parentId] : null;
+      }
+      return parts.join(' > ');
+    }
+
+    async function loadData() {
+      const [locations, objects, existences, movements] = await Promise.all([
+        getAll('locations'), getAll('objects'), getAll('existences'), getAll('movements')
+      ]);
+      return { locations, objects, existences, movements };
+    }
+
+    async function renderAll() {
+      const data = await loadData();
+      renderStats(data);
+      renderLocations(data);
+      renderObjects(data);
+      renderRecent(data);
+      renderSearch(data, document.getElementById('searchInput')?.value || '');
+      if (state.selectedObjectId) renderDetail(data, state.selectedObjectId);
+    }
+
+    function renderStats({ objects, locations, movements }) {
+      document.getElementById('statObjects').textContent = objects.filter(o => o.activo).length;
+      document.getElementById('statLocations').textContent = locations.length;
+      document.getElementById('statMovements').textContent = movements.length;
+    }
+
+    function renderLocations({ locations, objects, existences }) {
+      const root = locations.filter(l => l.tipo === 'ambiente');
+      const list = document.getElementById('locationsList');
+      const countByRoot = new Map();
+      root.forEach(r => countByRoot.set(r.id, 0));
+      existences.forEach(ex => {
+        let current = locations.find(l => l.id === ex.ubicacionId);
+        while (current && current.parentId) current = locations.find(l => l.id === current.parentId);
+        if (current) countByRoot.set(current.id, (countByRoot.get(current.id) || 0) + 1);
+      });
+      list.innerHTML = root.map(loc => `
+        <article class="row">
+          <div class="row-main">
+            <div class="row-title">${loc.nombre}</div>
+            <div class="row-meta">${countByRoot.get(loc.id) || 0} registros cargados</div>
+          </div>
+          <div class="pill">${loc.tipo}</div>
+        </article>
+      `).join('');
+    }
+
+    function renderObjects({ objects, existences, locations }) {
+      const list = document.getElementById('objectsList');
+      list.innerHTML = objects.filter(o => o.activo).map(obj => {
+        const rows = existences.filter(ex => ex.objetoId === obj.id);
+        const total = rows.reduce((sum, ex) => sum + ex.cantidad, 0);
+        return `
+          <article class="row" data-object-id="${obj.id}">
+            <div class="row-main">
+              <div class="row-title">${obj.nombre}</div>
+              <div class="row-meta">${total} total · ${rows.length} ubic.</div>
+            </div>
+            <div class="pill">${obj.tipo}</div>
+          </article>
+        `;
+      }).join('');
+
+      list.querySelectorAll('[data-object-id]').forEach(el => {
+        el.addEventListener('click', () => openObject(el.dataset.objectId));
+      });
+    }
+
+    function renderRecent({ movements, objects }) {
+      const byObject = Object.fromEntries(objects.map(o => [o.id, o]));
+      const list = document.getElementById('recentList');
+      const sorted = [...movements].sort((a, b) => b.fecha - a.fecha).slice(0, 12);
+      list.innerHTML = sorted.map(mv => `
+        <article class="row">
+          <div class="row-main">
+            <div class="row-title">${labelForMovement(mv.tipoMovimiento)}</div>
+            <div class="row-meta">${byObject[mv.objetoId]?.nombre || 'Objeto'} · ${mv.detalle || ''}</div>
+          </div>
+          <div class="pill">${new Date(mv.fecha).toLocaleDateString()}</div>
+        </article>
+      `).join('');
+    }
+
+    function labelForMovement(type) {
+      const map = {
+        alta_manual: 'Alta manual',
+        alta_inicial: 'Carga inicial',
+        import_csv: 'Importación CSV',
+        mover: 'Movimiento',
+        ajuste: 'Ajuste',
+        unificar: 'Unificación',
+        baja: 'Baja'
+      };
+      return map[type] || 'Movimiento';
+    }
+
+    function renderSearch({ objects, existences }, term) {
+      const list = document.getElementById('searchResults');
+      const q = term.trim().toLowerCase();
+      const filtered = objects.filter(obj => !q || obj.nombre.toLowerCase().includes(q) || obj.tags.some(t => t.toLowerCase().includes(q)));
+      list.innerHTML = filtered.map(obj => {
+        const rows = existences.filter(ex => ex.objetoId === obj.id);
+        const total = rows.reduce((sum, ex) => sum + ex.cantidad, 0);
+        return `
+          <article class="row" data-object-id="${obj.id}">
+            <div class="row-main">
+              <div class="row-title">${obj.nombre}</div>
+              <div class="row-meta">${total} total · ${rows.length} ubicaciones</div>
+            </div>
+            <div class="pill">ver</div>
+          </article>
+        `;
+      }).join('');
+      list.querySelectorAll('[data-object-id]').forEach(el => {
+        el.addEventListener('click', () => openObject(el.dataset.objectId));
+      });
+    }
+
+    function renderDetail({ objects, existences, locations }, objectId) {
+      const obj = objects.find(o => o.id === objectId);
+      const rows = existences.filter(ex => ex.objetoId === objectId);
+      const total = rows.reduce((sum, ex) => sum + ex.cantidad, 0);
+      const content = document.getElementById('detailContent');
+      content.innerHTML = `
+        <section class="panel">
+          <h3>${obj.nombre}</h3>
+          <div class="muted">#${obj.tags.join(' #')}</div>
+          <div class="section-title" style="margin-top:16px;">Cantidad total</div>
+          <div class="stat-value">${total}</div>
+        </section>
+        <section class="panel">
+          <h3>Distribución</h3>
+          <div class="detail-grid">
+            ${rows.map(ex => `
+              <div class="row" style="padding:12px 14px;">
+                <div class="row-main">
+                  <div class="row-title">${formatPath(ex.ubicacionId, locations)}</div>
+                  <div class="row-meta">Existencia cargada</div>
+                </div>
+                <div class="pill">${ex.cantidad}</div>
+              </div>
+            `).join('')}
+          </div>
+        </section>
+        <section class="panel">
+          <h3>Acciones</h3>
+          <div class="btn-row">
+            <button class="btn primary" data-action="move">Mover</button>
+            <button class="btn secondary" data-action="adjust">Ajustar</button>
+            <button class="btn secondary" data-action="unify">Unificar</button>
+          </div>
+        </section>
+      `;
+      content.querySelector('[data-action="move"]').addEventListener('click', () => openModal('move'));
+      content.querySelector('[data-action="adjust"]').addEventListener('click', () => openModal('adjust'));
+      content.querySelector('[data-action="unify"]').addEventListener('click', () => openModal('unify'));
+    }
+
+    function setView(name) {
+      state.currentView = name;
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(`view-${name}`).classList.add('active');
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.open === name));
+      const active = document.getElementById(`view-${name}`);
+      document.getElementById('screenTitle').textContent = active.dataset.title;
+      document.getElementById('screenSubtitle').textContent = active.dataset.subtitle;
+    }
+
+    function openObject(id) {
+      state.selectedObjectId = id;
+      loadData().then(data => renderDetail(data, id));
+      setView('detail');
+    }
+
+    function openModal(type) {
+      const backdrop = document.getElementById('modalBackdrop');
+      const box = document.getElementById('modalBox');
+      if (type === 'settings') {
+        box.innerHTML = `
+          <div class="modal-header"><h3 class="modal-title">Ajustes</h3><button class="icon-btn" data-close-modal>✕</button></div>
+          <div class="stack">
+            <button class="btn secondary">Exportar JSON</button>
+            <button class="btn secondary">Exportar CSV</button>
+            <button class="btn secondary">Importar CSV</button>
+            <div class="muted">Ordo · demo base</div>
+          </div>`;
+      }
+      if (type === 'add') {
+        box.innerHTML = `
+          <div class="modal-header"><h3 class="modal-title">Nuevo objeto</h3><button class="icon-btn" data-close-modal>✕</button></div>
+          <div class="field"><label>Nombre</label><input class="input" placeholder="Ej. Tornillos varios"></div>
+          <div class="field"><label>Cantidad</label><input class="input" type="number" value="1"></div>
+          <div class="field"><label>Tipo</label><select class="select"><option>general</option><option>alimento</option><option>ropa</option></select></div>
+          <div class="btn-row"><button class="btn primary">Guardar</button><button class="btn secondary" data-close-modal>Cancelar</button></div>`;
+      }
+      if (type === 'move') {
+        box.innerHTML = `
+          <div class="modal-header"><h3 class="modal-title">Mover objeto</h3><button class="icon-btn" data-close-modal>✕</button></div>
+          <div class="field"><label>Desde</label><input class="input" value="Ubicación actual" readonly></div>
+          <div class="field"><label>Hacia</label><input class="input" placeholder="Seleccionar ubicación"></div>
+          <div class="field"><label>Cantidad</label><input class="input" type="number" value="1"></div>
+          <div class="btn-row"><button class="btn primary">Confirmar</button></div>`;
+      }
+      if (type === 'adjust') {
+        box.innerHTML = `
+          <div class="modal-header"><h3 class="modal-title">Ajustar cantidad</h3><button class="icon-btn" data-close-modal>✕</button></div>
+          <div class="field"><label>Nuevo valor</label><input class="input" type="number" value="1"></div>
+          <div class="field"><label>Detalle</label><textarea class="textarea" placeholder="Motivo del ajuste"></textarea></div><div class="btn-row"><button class="btn primary">Guardar ajuste</button></div>`;
+  }
+  if (type === 'unify') {
+    box.innerHTML = `
+      <div class="modal-header"><h3 class="modal-title">Unificar ubicaciones</h3><button class="icon-btn" data-close-modal>✕</button></div>
+      <div class="muted">Consolida todas las existencias del objeto en un solo destino.</div>
+      <div class="field" style="margin-top:14px;"><label>Destino</label><input class="input" placeholder="Seleccionar ubicación"></div>
+      <div class="btn-row"><button class="btn primary">Unificar</button></div>`;
+  }
+  backdrop.classList.add('show');
+  box.querySelectorAll('[data-close-modal]').forEach(btn => btn.addEventListener('click', closeModal));
+  backdrop.addEventListener('click', onBackdropClick);
+}
+
+function onBackdropClick(e) {
+  if (e.target.id === 'modalBackdrop') closeModal();
+}
+
+function closeModal() {
+  document.getElementById('modalBackdrop').classList.remove('show');
+  document.getElementById('modalBackdrop').removeEventListener('click', onBackdropClick);
+}
+
+function finishBoot() {
+  const splash = document.getElementById('splash');
+  const shell = document.getElementById('shell');
+  setTimeout(() => {
+    splash.classList.add('hidden');
+    shell.classList.add('ready');
+  }, 900);
+}
+
+function showBootError(error) {
+  console.error(error);
+  const box = document.getElementById('modalBox');
+  box.innerHTML = `
+    <div class="modal-header"><h3 class="modal-title">Error al iniciar</h3></div>
+    <div class="muted">La app arrancó con un problema de JavaScript. Abrí la consola del navegador o revisá el código subido a GitHub.</div>
+    <div class="field" style="margin-top:14px;"><label>Detalle</label><textarea class="textarea" readonly>${String(error && error.message ? error.message : error)}</textarea></div>
+  `;
+  document.getElementById('modalBackdrop').classList.add('show');
+  document.getElementById('splash').classList.add('hidden');
+  document.getElementById('shell').classList.add('ready');
+}
+
+async function init() {
+  try {
+    state.db = await openDB();
+    await seedIfEmpty();
+    await renderAll();
+
+    document.querySelectorAll('[data-open]').forEach(el => {
+      el.addEventListener('click', () => {
+        const target = el.dataset.open;
+        if (['home','locations','objects','search','recent'].includes(target)) setView(target);
+        if (target === 'settings') openModal('settings');
+      });
+    });
+
+    document.getElementById('fab').addEventListener('click', () => openModal('add'));
+    document.getElementById('searchInput').addEventListener('input', async (e) => {
+      const data = await loadData();
+      renderSearch(data, e.target.value);
+    });
+
+    finishBoot();
+  } catch (error) {
+    showBootError(error);
+  }
+}
+
+init();
+
+  </script>
+</body>
+</html>
