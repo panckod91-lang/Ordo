@@ -1,0 +1,719 @@
+<!DOCTYPE html><html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Ordo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F0EDE8;
+      --surface: #FAF8F4;
+      --surface-2: #F6F1EA;
+      --text: #3D2010;
+      --subtle: #6B4226;
+      --gold: #C9A030;
+      --dark: #4A2C17;
+      --line: rgba(61, 32, 16, 0.10);
+      --shadow: 0 12px 36px rgba(61, 32, 16, 0.10);
+      --radius-xl: 28px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --safe-top: env(safe-area-inset-top);
+      --safe-bottom: env(safe-area-inset-bottom);
+    }* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+.app {
+  position: relative;
+  height: 100dvh;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.splash {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  transition: opacity .45s ease, visibility .45s ease;
+}
+
+.splash.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.splash-inner {
+  width: 100%;
+  max-width: 420px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  transform: translateY(-5vh);
+}
+
+.brand-word {
+  display: flex;
+  align-items: baseline;
+  line-height: .92;
+  user-select: none;
+  animation: rise .8s ease;
+}
+
+.brand-word .o {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(80px, 16vw, 118px);
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.brand-word .rest {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(78px, 15vw, 114px);
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: -0.05em;
+}
+
+.brand-line {
+  width: min(60vw, 240px);
+  height: 1px;
+  background: rgba(201, 160, 48, .35);
+}
+
+.tagline {
+  letter-spacing: .28em;
+  font-size: 14px;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.loader {
+  width: 120px;
+  height: 3px;
+  background: rgba(61, 32, 16, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.loader::after {
+  content: '';
+  display: block;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  animation: loading 1.25s infinite ease-in-out;
+}
+
+@keyframes loading {
+  from { transform: translateX(-130%); }
+  to { transform: translateX(280%); }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.shell {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .45s ease, transform .45s ease;
+}
+
+.shell.ready {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.topbar {
+  padding: calc(16px + var(--safe-top)) 20px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.topbar-left {
+  min-width: 0;
+}
+
+.app-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px;
+  line-height: 1;
+  margin: 0;
+  letter-spacing: -0.03em;
+}
+
+.app-subtitle {
+  color: var(--subtle);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  margin-top: 6px;
+}
+
+.icon-row { display: flex; gap: 10px; }
+
+.icon-btn {
+  width: 42px;
+  height: 42px;
+  border: 0;
+  background: rgba(255,255,255,.58);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+
+.icon-btn svg { width: 20px; height: 20px; stroke: var(--text); }
+
+.views {
+  position: relative;
+  overflow: hidden;
+}
+
+.view {
+  position: absolute;
+  inset: 0;
+  padding: 0 20px 110px;
+  overflow: auto;
+  opacity: 0;
+  transform: translateX(16px);
+  pointer-events: none;
+  transition: opacity .28s ease, transform .28s ease;
+}
+
+.view.active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.hero {
+  background: linear-gradient(180deg, rgba(255,255,255,.56), rgba(255,255,255,.78));
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  border-radius: var(--radius-xl);
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  margin: 0 0 8px;
+}
+
+.hero-text {
+  margin: 0;
+  color: var(--subtle);
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.stat {
+  background: rgba(255,255,255,.65);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--subtle);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  margin-top: 6px;
+}
+
+.section-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  color: var(--subtle);
+  letter-spacing: .16em;
+  margin: 22px 0 12px;
+  font-weight: 700;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  min-height: 124px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.card.dark {
+  background: var(--dark);
+  color: #F8F2EA;
+  border-color: rgba(255,255,255,.06);
+}
+
+.card-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: rgba(201,160,48,.14);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.card.dark .card-icon {
+  background: rgba(201,160,48,.18);
+}
+
+.card-title {
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+
+.card-meta {
+  font-size: 12px;
+  color: var(--subtle);
+  margin-top: 4px;
+}
+
+.card.dark .card-meta {
+  color: rgba(248,242,234,.7);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.row {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.row-main {
+  min-width: 0;
+}
+
+.row-title {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.row-meta {
+  color: var(--subtle);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.pill {
+  background: rgba(201,160,48,.12);
+  color: var(--dark);
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.search {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.input, .select, .textarea {
+  width: 100%;
+  background: rgba(255,255,255,.72);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 14px;
+  outline: none;
+}
+
+.textarea { min-height: 90px; resize: vertical; }
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  border-radius: 22px;
+  padding: 16px;
+}
+
+.panel h3 {
+  margin: 0 0 14px;
+  font-size: 16px;
+  letter-spacing: -0.02em;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.field label {
+  font-size: 12px;
+  color: var(--subtle);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-weight: 700;
+}
+
+.btn-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  border: 0;
+  border-radius: 16px;
+  padding: 14px 16px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.btn.primary {
+  background: var(--dark);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(61,32,16,.18);
+}
+
+.btn.secondary {
+  background: rgba(255,255,255,.72);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+.detail-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.fab {
+  position: absolute;
+  right: 20px;
+  bottom: calc(82px + var(--safe-bottom));
+  width: 58px;
+  height: 58px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--dark);
+  color: white;
+  font-size: 30px;
+  box-shadow: 0 16px 26px rgba(61,32,16,.22);
+  cursor: pointer;
+  z-index: 8;
+}
+
+.bottom-nav {
+  position: relative;
+  padding: 10px 16px calc(12px + var(--safe-bottom));
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  background: rgba(240,237,232,.82);
+  backdrop-filter: blur(18px);
+  border-top: 1px solid rgba(61, 32, 16, .08);
+  z-index: 7;
+}
+
+.nav-btn {
+  border: 0;
+  background: transparent;
+  border-radius: 16px;
+  padding: 10px 6px;
+  color: var(--subtle);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.nav-btn.active {
+  background: rgba(255,255,255,.66);
+  color: var(--text);
+}
+
+.nav-icon { font-size: 18px; }
+.nav-label { font-size: 11px; font-weight: 700; }
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(25, 12, 5, .30);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 40;
+}
+
+.modal-backdrop.show { display: flex; }
+
+.modal {
+  width: 100%;
+  max-width: 560px;
+  background: var(--surface);
+  border-radius: 28px 28px 0 0;
+  padding: 18px 20px calc(20px + var(--safe-bottom));
+  box-shadow: 0 -16px 40px rgba(25, 12, 5, .16);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.modal-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  margin: 0;
+}
+
+.muted { color: var(--subtle); }
+
+@media (min-width: 700px) {
+  .app {
+    max-width: 430px;
+    margin: 0 auto;
+    box-shadow: 0 0 0 1px rgba(61,32,16,.05), 0 24px 90px rgba(61,32,16,.12);
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="splash" id="splash">
+      <div class="splash-inner">
+        <div class="brand-word"><span class="o">O</span><span class="rest">rdo</span></div>
+        <div class="brand-line"></div>
+        <div class="tagline">Todo en su lugar</div>
+        <div class="loader"></div>
+      </div>
+    </section><section class="shell" id="shell">
+  <header class="topbar">
+    <div class="topbar-left">
+      <h1 class="app-title" id="screenTitle">Ordo</h1>
+      <div class="app-subtitle" id="screenSubtitle">Inicio</div>
+    </div>
+    <div class="icon-row">
+      <button class="icon-btn" data-open="search" aria-label="Buscar">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="6"></circle><path d="m20 20-4.2-4.2"></path></svg>
+      </button>
+      <button class="icon-btn" data-open="settings" aria-label="Ajustes">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path d="M12 3v3"></path><path d="M12 18v3"></path><path d="M3 12h3"></path><path d="M18 12h3"></path><path d="m5.6 5.6 2.1 2.1"></path><path d="m16.3 16.3 2.1 2.1"></path><path d="m18.4 5.6-2.1 2.1"></path><path d="m7.7 16.3-2.1 2.1"></path><circle cx="12" cy="12" r="3.5"></circle></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="views">
+    <section class="view active" id="view-home" data-title="Ordo" data-subtitle="Inicio">
+      <div class="hero">
+        <h2 class="hero-title">Todo en su lugar</h2>
+        <p class="hero-text">Mapa vivo de tu casa para encontrar, mover y ordenar objetos sin volverte loco.</p>
+        <div class="stat-row">
+          <div class="stat"><div class="stat-value" id="statObjects">0</div><div class="stat-label">Objetos</div></div>
+          <div class="stat"><div class="stat-value" id="statLocations">0</div><div class="stat-label">Ubicaciones</div></div>
+          <div class="stat"><div class="stat-value" id="statMovements">0</div><div class="stat-label">Movimientos</div></div>
+        </div>
+      </div>
+
+      <div class="section-title">Principal</div>
+      <div class="grid">
+        <article class="card dark" data-open="objects">
+          <div class="card-icon">📦</div>
+          <div><div class="card-title">Objetos</div><div class="card-meta">Inventario global</div></div>
+        </article>
+        <article class="card" data-open="locations">
+          <div class="card-icon">🏠</div>
+          <div><div class="card-title">Ambientes</div><div class="card-meta">Explorar por lugar</div></div>
+        </article>
+        <article class="card" data-open="search">
+          <div class="card-icon">🔎</div>
+          <div><div class="card-title">Buscar</div><div class="card-meta">Encontrar rápido</div></div>
+        </article>
+        <article class="card" data-open="recent">
+          <div class="card-icon">🕓</div>
+          <div><div class="card-title">Recientes</div><div class="card-meta">Últimos movimientos</div></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="view" id="view-locations" data-title="Ambientes" data-subtitle="Explorar">
+      <div class="section-title">Ambientes</div>
+      <div class="list" id="locationsList"></div>
+    </section>
+
+    <section class="view" id="view-objects" data-title="Objetos" data-subtitle="Inventario">
+      <div class="filters">
+        <select class="select"><option>Tipo</option><option>General</option><option>Alimento</option></select>
+        <select class="select"><option>Tag</option><option>Herramientas</option><option>Cocina</option></select>
+        <select class="select"><option>Stock</option><option>Todos</option><option>Bajo</option></select>
+      </div>
+      <div class="list" id="objectsList"></div>
+    </section>
+
+    <section class="view" id="view-search" data-title="Buscar" data-subtitle="Global">
+      <div class="search">
+        <input class="input" id="searchInput" placeholder="Buscar objeto, tag o ubicación" />
+      </div>
+      <div class="filters">
+        <select class="select"><option>Tipo</option><option>General</option><option>Ropa</option></select>
+        <select class="select"><option>Tag</option><option>Todos</option></select>
+        <select class="select"><option>Ubicación</option><option>Todas</option></select>
+      </div>
+      <div class="list" id="searchResults"></div>
+    </section>
+
+    <section class="view" id="view-recent" data-title="Recientes" data-subtitle="Historial">
+      <div class="list" id="recentList"></div>
+    </section>
+
+    <section class="view" id="view-detail" data-title="Objeto" data-subtitle="Detalle">
+      <div class="stack" id="detailContent"></div>
+    </section>
+  </main>
+
+  <button class="fab" id="fab" aria-label="Agregar">+</button>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-open="home"><div class="nav-icon">⌂</div><div class="nav-label">Inicio</div></button>
+    <button class="nav-btn" data-open="locations"><div class="nav-icon">▦</div><div class="nav-label">Ambientes</div></button>
+    <button class="nav-btn" data-open="objects"><div class="nav-icon">◫</div><div class="nav-label">Objetos</div></button>
+    <button class="nav-btn" data-open="recent"><div class="nav-icon">↺</div><div class="nav-label">Recientes</div></button>
+  </nav>
+</section>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+  </div>  <script>
+    const DB_NAME = 'ordo-db';
+    const DB_VERSION = 1;
+    const state = {
+      db: null,
+      selectedObjectId: null,
+      currentView: 'home'
+    };
+
+    const demo = {
+      locations: [
+        { id: 'loc-1', nombre: 'Cocina', tipo: 'ambiente', parentId: null },
+        { id: 'loc-2', nombre: 'Dormitorio', tipo: 'ambiente', parentId: null },
+        { id: 'loc-3', nombre: 'Pieza 2', tipo: 'ambiente', parentId: null },
+        { id: 'loc-4', nombre: 'Taller', tipo: 'ambiente', parentId: null },
+        { id: 'loc-5', nombre: 'Alacena', tipo: 'mueble', parentId: 'loc-1' },
+        { id: 'loc-6', nombre: 'Estante medio', tipo: 'sector', parentId: 'loc-5' },
+        { id: 'loc-7', nombre: 'Chifonier', tipo: 'mueble', parentId: 'loc-2' },
+        { id: 'loc-8', nombre: 'Cajón 3', tipo: 'sector', parentId: 'loc-7' },
+        { id: 'loc-9', nombre: 'Modular', tipo: 'mueble', parentId: 'loc-3' },
+        { id: 'loc-10', nombre: 'Cajón', tipo: 'sector', parentId: 'loc-9' },
+        { id: 'loc-11', nombre: 'Caja tornillos', tipo: 'mueble', parentId: 'loc-4' }
+      ],
+      objects: [
+        { id: 'obj-1', nombre: 'Tornillos varios', tipo: 'general', tags: ['herramientas', 'repuesto'], foto: '', notas: '', activo: true, fechaAlta: Date.now() },
+        { id: 'obj-2', nombre: 'Arroz', tipo: 'alimento', tags: ['cocina'], foto: '', notas: '', activo: true, fechaAlta: Date.now() },
+        { id: 'obj-3', nombre: 'Pilas AA', tipo: 'general', tags: ['repuesto'], foto: '', notas: '', activo: true, fechaAlta: Date.now() },
+        { id: 'obj-4', nombre: 'Cables USB', tipo: 'general', tags: ['cables'], foto: '', notas: '', activo: true, fechaAlta: Date.now() },
+        { id: 'obj-5', nombre: 'Lavandina', tipo: 'limpieza', tags: ['limpieza'], foto: '', notas: '', activo: true, fechaAlta: Date.now() },
+        { id: 'obj-6', nombre: 'Yerba', tipo: 'alimento', tags: ['cocina'], foto: '', notas: '', activo: true, fechaAlta: Date.now() },
+        { id: 'obj-7', nombre: 'Martillo', tipo: 'general', tags: ['herramientas'], foto: '', notas: '', activo: true, fechaAlta: Date.now() },
+        { id: 'obj-8', nombre: 'Medias invierno', tipo: 'ropa', tags: ['invierno'], foto: '', notas: '', activo: true, fechaAlta: Date.now() },
+        { id: 'obj-9', nombre: 'Latas de tomate', tipo: 'alimento', tags: ['cocina'], foto: '', notas: '', activo: true, fechaAlta: Date.now() },
+        { id: 'obj-10', nombre: 'Destornillador', tipo: 'general', tags: ['herramientas'], foto: '', notas: '', activo: true, fechaAlta: Date.now() }
+      ],
+      existences: [
+        { id: 'ex-1', objetoId: 'obj-1', ubicacionId: 'loc-8', cantidad: 20, fechaAlta: Date.now(), fechaMovimiento: Date.now() },
+        { id: 'ex-2', objetoId: 'obj-1', ubicacionId: 'loc-10', cantidad: 35, fechaAlta: Date.now(), fechaMovimiento: Date.now() },
+        { id: 'ex-3', objetoId: 'obj-2', ubicacionId: 'loc-6', cantidad: 1, fechaAlta: Date.now(), fechaMovimiento: Date.now() },
+        { id: 'ex-4', objetoId: 'obj-3', ubicacionId: 'loc-8', cantidad: 12, fechaAlta: Date.now(), fechaMovimiento: Date.now() },
+        { id: 'ex-5', objetoId: 'obj-4', ubicacionId: 'loc-11', cantidad: 6, fechaAlta: Date.now(), fechaMovimiento: Date.now() },
+        { id: 'ex-6', objetoId: 'obj-5', ubicacionId: 'loc-1', cantidad: 1, fechaAlta: Date.now(), fechaMovimiento: Date.now() },
+        { id: 'ex-7', objetoId: 'obj-6', ubicacionId: 'loc-6', cantidad: 2, fechaAlta: Date.now(), fechaMovimiento: Date.now() },
+        { id: 'ex-8', objetoId: 'obj-7', ubicacionId: 'loc-11', cantidad: 1, fechaAlta: Date.now(), fechaMovimiento: Date.now() },
+        { id: 'ex-9', objetoId: 'obj-8', ubicacionId: 'loc-7', cantidad: 12, fechaAlta: Date.now(), fechaMovimiento: Date.now() },
+        { id: 'ex-10', objetoId: 'obj-9', ubicacionId: 'loc-6', cantidad: 6, fechaAlta: Date.now(), fechaMovimiento: Date.now() },
+        { id: 'ex-11', objetoId: 'obj-10', ubicacionId: 'loc-11', cantidad: 2, fechaAlta: Date.now(), fechaMovimiento: Date.now() }
+      ],
+      movements: [
+        { id: 'mv-1', objetoId: 'obj-4', desdeUbicacionId: 'loc-8', haciaUbicacionId: 'loc-11', cantidad: 4, tipoMovimiento: 'mover', detalle: 'Cables USB movidos al taller', fecha: Date.now() - 86400000 },
+        { id: 'mv-2', objetoId: 'obj-2', desdeUbicacionId: null, haciaUbicacionId: 'loc-6', cantidad: 1, tipoMovimiento: 'alta_inicial', detalle: 'Alta in
