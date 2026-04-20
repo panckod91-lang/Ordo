@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#EDE9E2">
+<title>Ordo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #EDE9E2;
+  --bg2: #E3DDD4;
+  --card: #F5F1EA;
+  --card2: #FAF7F3;
+  --brown: #3A1E0C;
+  --brown2: #6B4220;
+  --brown3: #A07050;
+  --brown4: #C4A882;
+  --gold: #B8882A;
+  --gold2: #D4A83C;
+  --gold3: #EDD27A;
+  --dark: #2E1608;
+  --border: rgba(58,30,12,0.12);
+  --shadow: 0 2px 14px rgba(58,30,12,0.09);
+  --shadow2: 0 6px 28px rgba(58,30,12,0.14);
+  --r: 16px;
+  --rs: 10px;
+  --serif: 'Playfair Display', Georgia, serif;
+  --sans: 'Lato', system-ui, sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:var(--sans);color:var(--brown);font-size:15px;line-height:1.5}
+
+/* APP SHELL */
+#app{position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg);transition:transform .22s cubic-bezier(.4,0,.2,1),opacity .22s ease;overflow:hidden}
+.screen.hidden{pointer-events:none;opacity:0;transform:translateX(100%)}
+.screen.slide-back{transform:translateX(-30%);opacity:.6}
+
+/* HEADER */
+.hdr{display:flex;align-items:center;gap:10px;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));background:var(--bg);position:relative;z-index:10;min-height:56px}
+.hdr-back{width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--card);border:1px solid var(--border);cursor:pointer;flex-shrink:0;transition:background .15s}
+.hdr-back:active{background:var(--bg2)}
+.hdr-back svg{width:18px;height:18px;stroke:var(--brown);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.hdr-title{flex:1;font-family:var(--serif);font-size:18px;font-weight:600;color:var(--brown);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr-title.center{text-align:center}
+.hdr-btn{width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;background:var(--card);border:1px solid var(--border);transition:background .15s;flex-shrink:0}
+.hdr-btn:active{background:var(--bg2)}
+.hdr-btn svg{width:18px;height:18px;stroke:var(--brown);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hdr-btn.gold-btn{background:var(--gold);border-color:var(--gold)}
+.hdr-btn.gold-btn svg{stroke:#fff}
+
+/* BREADCRUMB */
+.breadcrumb{padding:0 16px 10px;font-family:var(--sans);font-size:12px;color:var(--brown3);display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+.breadcrumb span{cursor:pointer}
+.breadcrumb span:hover{color:var(--brown2)}
+.breadcrumb .sep{opacity:.4}
+.breadcrumb .current{color:var(--brown2);font-weight:700}
+
+/* SCROLL CONTENT */
+.content{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding-bottom:max(80px,calc(70px + env(safe-area-inset-bottom)));-webkit-overflow-scrolling:touch}
+.content.no-pad{padding-bottom:0}
+
+/* SECTIONS */
+.section{padding:0 16px 4px}
+.section-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--brown3);padding:14px 16px 6px;opacity:.7}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin:0 16px 10px;box-shadow:var(--shadow);transition:transform .12s,box-shadow .12s}
+.card:active{transform:scale(.98);box-shadow:none}
+.card-row{display:flex;align-items:center;gap:12px}
+.card-icon{width:40px;height:40px;border-radius:var(--rs);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.card-icon.gold-bg{background:linear-gradient(135deg,var(--gold),var(--gold2));font-size:18px}
+.card-info{flex:1;min-width:0}
+.card-name{font-family:var(--serif);font-size:16px;font-weight:600;color:var(--brown);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-meta{font-size:12px;color:var(--brown3);margin-top:1px}
+.card-qty{font-family:var(--serif);font-size:18px;font-weight:700;color:var(--gold);white-space:nowrap}
+.card-arrow{opacity:.3}
+.card-arrow svg{width:16px;height:16px;stroke:var(--brown);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* DASHBOARD GRID */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 16px}
+.dash-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:var(--shadow);cursor:pointer;transition:transform .12s,box-shadow .12s}
+.dash-card:active{transform:scale(.95);box-shadow:none}
+.dash-card.dark{background:var(--brown);border-color:var(--brown)}
+.dash-card.dark .dash-label{color:rgba(255,255,255,.7)}
+.dash-card.dark .dash-emoji{filter:none}
+.dash-emoji{font-size:28px;line-height:1}
+.dash-label{font-family:var(--sans);font-size:13px;font-weight:700;color:var(--brown2);letter-spacing:.02em;text-align:center}
+.dash-count{font-family:var(--serif);font-size:22px;font-weight:700;color:var(--gold)}
+
+/* SPLASH */
+#splash{background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;z-index:100}
+.splash-logo{display:flex;align-items:baseline;gap:0}
+.splash-o{font-family:var(--serif);font-size:80px;font-weight:700;color:var(--gold);line-height:1;animation:splashO 1s ease forwards}
+.splash-rdo{font-family:var(--serif);font-size:80px;font-weight:600;color:var(--brown);line-height:1;animation:splashRdo 1s ease .15s both}
+.splash-line{width:220px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);animation:splashLine .8s ease .3s both}
+.splash-tag{font-family:var(--sans);font-size:14px;font-weight:300;color:var(--brown2);letter-spacing:.15em;text-transform:uppercase;animation:splashFade .8s ease .5s both}
+@keyframes splashO{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+@keyframes splashRdo{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes splashLine{from{opacity:0;transform:scaleX(0)}to{opacity:1;transform:scaleX(1)}}
+@keyframes splashFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* FAB */
+.fab{position:fixed;right:20px;bottom:max(84px,calc(74px + env(safe-area-inset-bottom)));width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(184,136,42,.45);cursor:pointer;z-index:50;transition:transform .15s,box-shadow .15s;border:none}
+.fab:active{transform:scale(.92);box-shadow:0 2px 8px rgba(184,136,42,.3)}
+.fab svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+
+/* BOTTOM NAV */
+.bot-nav{position:fixed;bottom:0;left:0;right:0;height:max(64px,calc(54px + env(safe-area-inset-bottom)));background:var(--card);border-top:1px solid var(--border);display:flex;align-items:flex-start;padding-top:6px;z-index:40;box-shadow:0 -4px 20px rgba(58,30,12,.08)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;transition:color .15s}
+.nav-item .nav-icon{font-size:20px;line-height:1}
+.nav-item .nav-label{font-size:10px;font-weight:700;letter-spacing:.03em;color:var(--brown3)}
+.nav-item.active .nav-label{color:var(--gold)}
+.nav-item.active .nav-icon{filter:none}
+
+/* EMPTY STATE */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:48px 32px;text-align:center}
+.empty-icon{font-size:48px;opacity:.3}
+.empty-title{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--brown2)}
+.empty-sub{font-size:13px;color:var(--brown3);line-height:1.6}
+
+/* FORMS */
+.form-group{padding:0 16px 12px}
+.form-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--brown3);margin-bottom:6px;display:block}
+.form-input{width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:var(--rs);padding:12px 14px;font-family:var(--sans);font-size:15px;color:var(--brown);outline:none;transition:border-color .15s;-webkit-appearance:none}
+.form-input:focus{border-color:var(--gold)}
+.form-row{display:flex;gap:10px}
+.form-row .form-group{flex:1}
+.form-select{width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:var(--rs);padding:12px 14px;font-family:var(--sans);font-size:15px;color:var(--brown);outline:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236B4220' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.form-context{background:var(--gold);background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:var(--rs);padding:10px 14px;margin:0 16px 16px;display:flex;align-items:center;gap:10px}
+.form-context-icon{font-size:18px}
+.form-context-text{font-size:13px;color:#fff;font-weight:700}
+.autocomplete-list{background:var(--card2);border:1px solid var(--border);border-radius:0 0 var(--rs) var(--rs);margin:0 16px;overflow:hidden;display:none}
+.autocomplete-list.show{display:block}
+.autocomplete-item{padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:14px;color:var(--brown2)}
+.autocomplete-item:last-child{border-bottom:none}
+.autocomplete-item:active{background:var(--bg2)}
+
+/* BUTTONS */
+.btn{display:block;width:calc(100% - 32px);margin:6px 16px;padding:14px;border-radius:var(--rs);font-family:var(--sans);font-size:15px;font-weight:700;letter-spacing:.03em;text-align:center;cursor:pointer;border:none;transition:opacity .15s,transform .12s}
+.btn:active{opacity:.85;transform:scale(.98)}
+.btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;box-shadow:0 4px 16px rgba(184,136,42,.3)}
+.btn-secondary{background:var(--card);border:1.5px solid var(--border);color:var(--brown2)}
+.btn-danger{background:#f8eae8;border:1.5px solid rgba(180,60,40,.2);color:#b03c28}
+.btn-row{display:flex;gap:10px;padding:6px 16px}
+.btn-row .btn{margin:0;flex:1}
+
+/* FICHA */
+.ficha-header{padding:16px;display:flex;flex-direction:column;gap:4px}
+.ficha-total{font-family:var(--serif);font-size:40px;font-weight:700;color:var(--brown);line-height:1}
+.ficha-total span{font-size:16px;font-weight:400;color:var(--brown3);margin-left:4px}
+.ficha-tags{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 12px}
+.tag{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--brown2);font-weight:700}
+.distrib-item{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--border);background:var(--card2)}
+.distrib-item:first-child{border-top:1px solid var(--border)}
+.distrib-loc{font-size:14px;color:var(--brown2);display:flex;align-items:center;gap:6px}
+.distrib-qty{font-family:var(--serif);font-size:18px;font-weight:700;color:var(--gold)}
+.distrib-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0}
+
+/* SEARCH */
+.search-bar{padding:8px 16px 12px;position:sticky;top:0;background:var(--bg);z-index:5}
+.search-input-wrap{position:relative}
+.search-input-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--brown3);fill:none;stroke-width:2;stroke-linecap:round}
+.search-input{width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:24px;padding:11px 14px 11px 38px;font-family:var(--sans);font-size:15px;color:var(--brown);outline:none}
+.search-input:focus{border-color:var(--gold)}
+.filter-row{display:flex;gap:8px;padding:4px 16px 0;overflow-x:auto;scrollbar-width:none}
+.filter-row::-webkit-scrollbar{display:none}
+.filter-chip{flex-shrink:0;background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--brown2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.filter-chip.active{background:var(--gold);border-color:var(--gold);color:#fff}
+
+/* RECIENTES */
+.hist-item{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border)}
+.hist-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.hist-icon.alta{background:#e8f5e9}
+.hist-icon.mover{background:#e8eaf6}
+.hist-icon.ajuste{background:#fff8e1}
+.hist-icon.import{background:#fce4ec}
+.hist-text{flex:1;min-width:0}
+.hist-main{font-size:14px;color:var(--brown);font-weight:400}
+.hist-main strong{font-weight:700}
+.hist-date{font-size:11px;color:var(--brown4);margin-top:2px}
+
+/* SWIPE ITEM */
+.swipe-wrap{position:relative;overflow:hidden;margin:0 0 2px}
+.swipe-actions{position:absolute;right:0;top:0;bottom:0;display:flex;align-items:stretch}
+.swipe-act{display:flex;align-items:center;justify-content:center;width:64px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0}
+.swipe-act.edit{background:#e8eaf6;color:#3949ab}
+.swipe-act.del{background:#ffebee;color:#c62828}
+.swipe-inner{background:var(--bg);transition:transform .2s ease;will-change:transform}
+
+/* OVERLAY / MODAL */
+.overlay{position:fixed;inset:0;background:rgba(30,12,4,.5);z-index:200;display:flex;flex-direction:column;justify-content:flex-end;opacity:0;pointer-events:none;transition:opacity .25s}
+.overlay.show{opacity:1;pointer-events:all}
+.modal{background:var(--bg);border-radius:24px 24px 0 0;padding-bottom:max(20px,env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.overlay.show .modal{transform:translateY(0)}
+.modal-handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:12px auto 16px}
+.modal-title{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--brown);padding:0 20px 16px}
+
+/* LOC PICKER */
+.loc-level{padding:0 16px 8px}
+.loc-level-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--brown3);margin-bottom:6px;opacity:.7}
+.loc-option{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--rs);margin-bottom:6px;cursor:pointer;transition:border-color .15s,background .15s}
+.loc-option:active,.loc-option.selected{border-color:var(--gold);background:rgba(184,136,42,.07)}
+.loc-option-name{font-size:14px;color:var(--brown);font-weight:400}
+.loc-option-check{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;transition:all .15s}
+.loc-option.selected .loc-option-check{background:var(--gold);border-color:var(--gold)}
+.loc-option.selected .loc-option-check::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff}
+
+/* MOVE SCREEN */
+.move-from{background:var(--card);border-radius:var(--rs);padding:14px;margin:0 16px 4px;border:1px solid var(--border)}
+.move-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--brown3);margin-bottom:4px;opacity:.7}
+.move-value{font-family:var(--serif);font-size:16px;color:var(--brown);font-weight:600}
+.qty-input-wrap{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:var(--rs);padding:10px 14px;margin:0 16px;border:1px solid var(--border)}
+.qty-btn{width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:300;color:var(--brown);transition:background .15s}
+.qty-btn:active{background:var(--bg)}
+.qty-val{flex:1;text-align:center;font-family:var(--serif);font-size:28px;font-weight:700;color:var(--brown)}
+.qty-max{font-size:11px;color:var(--brown4);text-align:center;padding:4px 0 12px}
+
+/* GOLD DIVIDER */
+.gold-divider{height:2px;background:linear-gradient(90deg,transparent,var(--gold3),transparent);margin:6px 16px 14px;opacity:.5}
+
+/* DASH HEADER */
+.dash-header{padding:16px 16px 4px;display:flex;align-items:center;justify-content:space-between}
+.dash-logo{display:flex;align-items:baseline;gap:0}
+.dash-o{font-family:var(--serif);font-size:30px;font-weight:700;color:var(--gold);line-height:1}
+.dash-rdo{font-family:var(--serif);font-size:30px;font-weight:600;color:var(--brown);line-height:1}
+.dash-sub{font-size:11px;font-weight:300;color:var(--brown3);letter-spacing:.1em;text-transform:uppercase;padding:0 16px 12px}
+
+/* TAGS input */
+.tags-wrap{display:flex;flex-wrap:wrap;gap:6px;padding:8px 14px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--rs);min-height:46px;cursor:text}
+.tags-wrap:focus-within{border-color:var(--gold)}
+.tag-badge{background:var(--gold);color:#fff;border-radius:20px;padding:3px 8px 3px 10px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px}
+.tag-remove{cursor:pointer;font-size:14px;line-height:1;opacity:.7}
+.tag-input-hidden{border:none;outline:none;background:transparent;font-family:var(--sans);font-size:14px;color:var(--brown);min-width:80px;flex:1}
+
+/* ALERTS */
+.toast{position:fixed;top:max(60px,calc(50px + env(safe-area-inset-top)));left:50%;transform:translateX(-50%) translateY(-20px);background:var(--brown);color:#fff;border-radius:24px;padding:10px 20px;font-size:14px;font-weight:700;z-index:300;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* SCROLL hint */
+.scroll-hint{position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(transparent,var(--bg));pointer-events:none}
+
+/* STEP INDICATOR */
+.step-dots{display:flex;gap:6px;justify-content:center;padding:6px 0 12px}
+.step-dot{width:6px;height:6px;border-radius:50%;background:var(--border)}
+.step-dot.active{background:var(--gold);width:18px;border-radius:3px}
+
+/* AJUSTAR */
+.ajustar-obj{padding:12px 16px;display:flex;flex-direction:column;gap:2px}
+.ajustar-name{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--brown)}
+.ajustar-loc{font-size:13px;color:var(--brown3)}
+
+/* EMOJI PICKER */
+.emoji-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:8px 16px 12px}
+.emoji-opt{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:22px;border-radius:var(--rs);border:2px solid transparent;cursor:pointer;background:var(--card);transition:border-color .12s,transform .1s}
+.emoji-opt:active{transform:scale(.9)}
+.emoji-opt.selected{border-color:var(--gold);background:rgba(184,136,42,.1)}
+
+/* CARD WITH DELETE */
+.card-deletable{position:relative}
+.card-delete-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;background:#ffebee;border:1px solid rgba(180,60,40,.2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:#c62828;opacity:0;transition:opacity .15s;z-index:2}
+.card-deletable:active .card-delete-btn,.card-deletable.show-delete .card-delete-btn{opacity:1}
+
+/* SETTINGS */
+.settings-item{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--card);border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+.settings-item:active{background:var(--bg2)}
+.settings-item:first-child{border-top:1px solid var(--border)}
+.settings-icon{width:38px;height:38px;border-radius:var(--rs);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.settings-label{flex:1}
+.settings-title{font-size:15px;font-weight:700;color:var(--brown)}
+.settings-sub{font-size:12px;color:var(--brown3)}
+.settings-chevron{opacity:.3}
+.settings-chevron svg{width:16px;height:16px;stroke:var(--brown);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.settings-section-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--brown3);padding:18px 16px 6px;opacity:.7}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- screens rendered by JS -->
+</div>
+
+<div class="overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────
+// CONSTANTS
+// ─────────────────────────────────────────────
+const TIPOS = ['general','alimento','limpieza','higiene','ropa','congelado'];
+const TIPO_ICONS = {general:'📦',alimento:'🍽️',limpieza:'🧹',higiene:'🪥',ropa:'👕',congelado:'🧊'};
+const AMB_ICONS = {cocina:'🍳',dormitorio:'🛏️',baño:'🚿',lavadero:'🧺',taller:'🛠️',sala:'🛋️',garage:'🚗',oficina:'💻',patio:'🌿',pieza:'🛏️'};
+const MOV_ICONS = {alta_manual:'➕',alta_inicial:'🌱',import_csv:'📥',mover:'↔️',ajuste:'🔧',unificar:'🔀',baja:'🗑️'};
+
+// ─────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+const fmt = d => new Date(d).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'});
+const fmtHour = d => new Date(d).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+const fmtFull = d => fmt(d) + ' ' + fmtHour(d);
+
+function showToast(msg, dur=2200){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+function svgBack(){return`<svg viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg>`}
+function svgPlus(){return`<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`}
+function svgSearch(){return`<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>`}
+function svgSettings(){return`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`}
+function svgEdit(){return`<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`}
+function svgChevron(){return`<svg viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>`}
+function svgMove(){return`<svg viewBox="0 0 24 24"><polyline points="5,9 2,12 5,15"/><polyline points="19,9 22,12 19,15"/><line x1="2" y1="12" x2="22" y2="12"/></svg>`}
+
+function getAmbIcon(nombre){
+  const n=nombre.toLowerCase();
+  for(const[k,v] of Object.entries(AMB_ICONS)){if(n.includes(k))return v;}
+  return '🏠';
+}
+function getUbicIcon(ubi){
+  if(ubi.icono)return ubi.icono;
+  if(!ubi.parentId)return getAmbIcon(ubi.nombre);
+  return'🗄️';
+}
+
+// ─────────────────────────────────────────────
+// IndexedDB
+// ─────────────────────────────────────────────
+const DB = {
+  _db: null,
+  open(){
+    return new Promise((res,rej)=>{
+      if(this._db){res(this._db);return;}
+      const req=indexedDB.open('ordo_v1',1);
+      req.onupgradeneeded=e=>{
+        const db=e.target.result;
+        if(!db.objectStoreNames.contains('ubicaciones'))
+          db.createObjectStore('ubicaciones',{keyPath:'id'}).createIndex('parentId','parentId');
+        if(!db.objectStoreNames.contains('objetos'))
+          db.createObjectStore('objetos',{keyPath:'id'});
+        if(!db.objectStoreNames.contains('existencias')){
+          const es=db.createObjectStore('existencias',{keyPath:'id'});
+          es.createIndex('objetoId','objetoId');
+          es.createIndex('ubicacionId','ubicacionId');
+        }
+        if(!db.objectStoreNames.contains('movimientos'))
+          db.createObjectStore('movimientos',{keyPath:'id'}).createIndex('objetoId','objetoId');
+      };
+      req.onsuccess=e=>{this._db=e.target.result;res(this._db);};
+      req.onerror=rej;
+    });
+  },
+  async tx(stores,mode='readonly'){
+    const db=await this.open();
+    return db.transaction(stores instanceof Array?stores:[stores],mode);
+  },
+  async getAll(store){
+    const tx=await this.tx(store);
+    return new Promise((res,rej)=>{const r=tx.objectStore(store).getAll();r.onsuccess=()=>res(r.result);r.onerror=rej;});
+  },
+  async get(store,id){
+    const tx=await this.tx(store);
+    return new Promise((res,rej)=>{const r=tx.objectStore(store).get(id);r.onsuccess=()=>res(r.result);r.onerror=rej;});
+  },
+  async put(store,item){
+    const tx=await this.tx(store,'readwrite');
+    return new Promise((res,rej)=>{const r=tx.objectStore(store).put(item);r.onsuccess=()=>res(r.result);r.onerror=rej;});
+  },
+  async delete(store,id){
+    const tx=await this.tx(store,'readwrite');
+    return new Promise((res,rej)=>{const r=tx.objectStore(store).delete(id);r.onsuccess=()=>res();r.onerror=rej;});
+  },
+  async getByIndex(store,index,val){
+    const tx=await this.tx(store);
+    return new Promise((res,rej)=>{const r=tx.objectStore(store).index(index).getAll(val);r.onsuccess=()=>res(r.result);r.onerror=rej;});
+  }
+};
+
+// ─────────────────────────────────────────────
+// ROUTER / STATE
+// ─────────────────────────────────────────────
+const Router = {
+  stack:[],
+  navigate(screen,params={}){
+    const current = this.current?.screen;
+    const prev=document.getElementById('screen-'+current);
+    if(prev){
+      if(current==='splash'){
+        prev.classList.add('hidden');
+        setTimeout(()=>{ try{ prev.remove(); }catch(e){} }, 260);
+      }else{
+        prev.classList.add('slide-back');
+      }
+    }
+    this.stack.push({screen,params});
+    this._render(screen,params);
+  },
+  back(){
+    if(this.stack.length<=1)return;
+    const prev=document.getElementById('screen-'+this.current?.screen);
+    if(prev){prev.classList.add('hidden');}
+    this.stack.pop();
+    const cur=this.current;
+    if(cur){
+      const el=document.getElementById('screen-'+cur.screen);
+      if(el){el.classList.remove('slide-back','hidden');}
+      else{this._render(cur.screen,cur.params);}
+    }
+  },
+  get current(){return this.stack[this.stack.length-1]||null;},
+  _render(screen,params){
+    const app=document.getElementById('app');
+    // Remove old instance of same screen
+    const old=document.getElementById('screen-'+screen);
+    if(old)old.remove();
+    // Restore previous slide-back screens
+    document.querySelectorAll('.screen.slide-back').forEach(s=>{
+      if(s.id!=='screen-'+screen) s.classList.remove('slide-back');
+    });
+    const div=document.createElement('div');
+    div.className='screen hidden';
+    div.id='screen-'+screen;
+    app.appendChild(div);
+    SCREENS[screen](div,params);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>div.classList.remove('hidden')));
+  }
+};
+
+// ─────────────────────────────────────────────
+// BREADCRUMB HELPERS
+// ─────────────────────────────────────────────
+async function getBreadcrumb(ubicacionId){
+  if(!ubicacionId) return [];
+  const all = await DB.getAll('ubicaciones');
+  const map = {};
+  all.forEach(u=>map[u.id]=u);
+  const chain=[];
+  let cur=map[ubicacionId];
+  while(cur){chain.unshift(cur);cur=cur.parentId?map[cur.parentId]:null;}
+  return chain;
+}
+
+function renderBreadcrumb(chain){
+  if(!chain.length)return'';
+  const parts=[`<span onclick="Router.navigate('dashboard')">Inicio</span>`];
+  chain.forEach((u,i)=>{
+    parts.push(`<span class="sep">›</span>`);
+    if(i<chain.length-1){
+      parts.push(`<span onclick="Router.navigate('ubicacion',{id:'${u.id}'})">${u.nombre}</span>`);
+    } else {
+      parts.push(`<span class="current">${u.nombre}</span>`);
+    }
+  });
+  return`<div class="breadcrumb">${parts.join('')}</div>`;
+}
+
+// ─────────────────────────────────────────────
+// LOCATION PATH STRING
+// ─────────────────────────────────────────────
+async function getPathString(ubicacionId){
+  const chain=await getBreadcrumb(ubicacionId);
+  return chain.map(u=>u.nombre).join(' › ');
+}
+
+// ─────────────────────────────────────────────
+// SCREENS
+// ─────────────────────────────────────────────
+const SCREENS = {};
+
+// ── SPLASH ──────────────────────────────────
+SCREENS.splash = (el,p)=>{
+  el.innerHTML=`
+    <div id="splash" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;background:var(--bg)">
+      <div class="splash-logo"><span class="splash-o">O</span><span class="splash-rdo">rdo</span></div>
+      <div class="splash-line"></div>
+      <div class="splash-tag">Todo en su lugar</div>
+    </div>`;
+  setTimeout(()=>{
+    el.classList.add('hidden');
+    Router.navigate('dashboard');
+  }, 1200);
+};
+
+// ── DASHBOARD ───────────────────────────────
+SCREENS.dashboard = async(el,p)=>{
+  const [objs,ubics,exs] = await Promise.all([DB.getAll('objetos'),DB.getAll('ubicaciones'),DB.getAll('existencias')]);
+  const ambientes = ubics.filter(u=>!u.parentId);
+  const totalObjs = objs.filter(o=>o.activo).length;
+
+  el.innerHTML=`
+    <div class="dash-header">
+      <div>
+        <div class="dash-logo"><span class="dash-o">O</span><span class="dash-rdo">rdo</span></div>
+        <div class="dash-sub">Todo en su lugar</div>
+      </div>
+      <div class="hdr-btn" data-action="settings">${svgSettings()}</div>
+    </div>
+    <div class="content no-pad">
+      <div class="dash-grid">
+        <div class="dash-card" data-nav="objetos">
+          <div class="dash-emoji">📦</div>
+          <div class="dash-count">${totalObjs}</div>
+          <div class="dash-label">Objetos</div>
+        </div>
+        <div class="dash-card" data-nav="ambientes">
+          <div class="dash-emoji">🏠</div>
+          <div class="dash-count">${ambientes.length}</div>
+          <div class="dash-label">Ambientes</div>
+        </div>
+        <div class="dash-card" data-nav="buscar">
+          <div class="dash-emoji">🔍</div>
+          <div class="dash-label">Buscar</div>
+        </div>
+        <div class="dash-card dark" data-nav="alta" data-params='{"modo":"libre"}'>
+          <div class="dash-emoji">➕</div>
+          <div class="dash-label" style="color:#fff">Agregar</div>
+        </div>
+        <div class="dash-card" data-nav="recientes">
+          <div class="dash-emoji">🕓</div>
+          <div class="dash-label">Recientes</div>
+        </div>
+        <div class="dash-card" data-nav="objetos" data-params='{"filtro":"stock"}'>
+          <div class="dash-emoji">⚠️</div>
+          <div class="dash-label">Stock bajo</div>
+        </div>
+      </div>
+      <div class="gold-divider"></div>
+      ${ambientes.length?`
+        <div class="section-label">Ambientes</div>
+        ${ambientes.map(a=>{
+          const hijos=ubics.filter(u=>u.parentId===a.id);
+          const objsAqui=exs.filter(e=>e.ubicacionId===a.id).length;
+          return`<div class="card" data-nav="ubicacion" data-id="${a.id}">
+            <div class="card-row">
+              <div class="card-icon">${getAmbIcon(a.nombre)}</div>
+              <div class="card-info">
+                <div class="card-name">${a.nombre}</div>
+                <div class="card-meta">${hijos.length} mueble${hijos.length!==1?'s':''}${objsAqui?` · ${objsAqui} obj.`:''}</div>
+              </div>
+              <div class="card-arrow">${svgChevron()}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      `:`<div class="empty"><div class="empty-icon">🏠</div><div class="empty-title">Sin ambientes</div><div class="empty-sub">Empezá agregando la cocina, el dormitorio, etc.</div></div>`}
+    </div>
+    <button class="fab" data-nav="alta" data-params='{"modo":"libre"}'>${svgPlus()}</button>
+    ${renderBottomNav('dashboard')}`;
+
+  el.querySelector('[data-action="settings"]')?.addEventListener('click',()=>Router.navigate('settings'));
+  attachNavEvents(el);
+};
+
+// ── AMBIENTES ────────────────────────────────
+SCREENS.ambientes = async(el,p)=>{
+  const ubics = await DB.getAll('ubicaciones');
+  const ambientes = ubics.filter(u=>!u.parentId);
+
+  const renderLista=()=>{
+    return ambientes.length?ambientes.map(a=>{
+      const hijos=ubics.filter(u=>u.parentId===a.id);
+      return`<div class="card" style="position:relative" data-nav="ubicacion" data-id="${a.id}">
+        <div class="card-row">
+          <div class="card-icon">${a.icono||getAmbIcon(a.nombre)}</div>
+          <div class="card-info" style="margin-right:32px">
+            <div class="card-name">${a.nombre}</div>
+            <div class="card-meta">${hijos.length} mueble${hijos.length!==1?'s':''}</div>
+          </div>
+          <div class="card-arrow">${svgChevron()}</div>
+        </div>
+        <div style="position:absolute;right:10px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:#fff8f5;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:3;font-size:14px" data-del-amb="${a.id}" data-nombre="${a.nombre}">🗑</div>
+      </div>`;
+    }).join(''):`<div class="empty"><div class="empty-icon">🏠</div><div class="empty-title">Sin ambientes</div><div class="empty-sub">Tocá ➕ para agregar el primero</div></div>`;
+  };
+
+  el.innerHTML=`
+    <div class="hdr">
+      <div class="hdr-back" data-back>${svgBack()}</div>
+      <div class="hdr-title">Ambientes</div>
+      <div class="hdr-btn gold-btn" data-action="nuevo-ambiente">${svgPlus()}</div>
+    </div>
+    <div class="content" id="amb-lista">
+      ${renderLista()}
+    </div>
+    ${renderBottomNav('')}`;
+
+  el.querySelector('[data-action="nuevo-ambiente"]')?.addEventListener('click',()=>openModalNuevoNodo(null,'ambiente',()=>Router.navigate('ambientes')));
+
+  el.querySelector('#amb-lista').addEventListener('click',async e=>{
+    const delBtn=e.target.closest('[data-del-amb]');
+    if(delBtn){
+      e.stopPropagation();
+      const id=delBtn.dataset.delAmb;
+      const nombre=delBtn.dataset.nombre;
+      if(!confirm(`¿Eliminar "${nombre}" y todo su contenido?\nSe borrarán muebles, sectores y se perderán las ubicaciones de los objetos.`))return;
+      await deleteUbicacionCascade(id);
+      Router.navigate('ambientes');
+    }
+  });
+
+  attachNavEvents(el);
+};
+
+// ── UBICACION (ambiente/mueble/sector) ──────
+SCREENS.ubicacion = async(el,p)=>{
+  const id = p.id;
+  const [ubics, objsAll, exs] = await Promise.all([DB.getAll('ubicaciones'),DB.getAll('objetos'),DB.getAll('existencias')]);
+  const map = {}; ubics.forEach(u=>map[u.id]=u);
+  const ubi = map[id];
+  if(!ubi){el.innerHTML='<div class="empty"><div class="empty-icon">❓</div><div class="empty-title">No encontrado</div></div>';return;}
+
+  const chain = await getBreadcrumb(id);
+  const hijos = ubics.filter(u=>u.parentId===id);
+  const exsAqui = exs.filter(e=>e.ubicacionId===id);
+  const objsAqui = exsAqui.map(e=>{
+    const o=objsAll.find(x=>x.id===e.objetoId&&x.activo);
+    return o?{...o,cantidad:e.cantidad,exId:e.id}:null;
+  }).filter(Boolean);
+
+  const esAmbiente = !ubi.parentId;
+  const childLabel = esAmbiente ? 'Muebles' : 'Sectores';
+  const childType = esAmbiente ? 'mueble' : 'sector';
+
+  el.innerHTML=`
+    <div class="hdr">
+      <div class="hdr-back" data-back>${svgBack()}</div>
+      <div class="hdr-title">${ubi.nombre}</div>
+      <div class="hdr-btn gold-btn" data-action="add-here">${svgPlus()}</div>
+    </div>
+    ${renderBreadcrumb(chain)}
+    <div class="content">
+      ${hijos.length?`
+        <div class="section-label">${childLabel}</div>
+        ${hijos.map(h=>{
+          const subHijos=ubics.filter(u=>u.parentId===h.id);
+          const exsH=exs.filter(e=>e.ubicacionId===h.id);
+          const totalH=exsH.reduce((a,e)=>a+e.cantidad,0);
+          // Sum objects in sub-locations too
+          const subExs=exs.filter(e=>subHijos.some(s=>s.id===e.ubicacionId));
+          const totalSub=subExs.reduce((a,e)=>a+e.cantidad,0);
+          return`<div class="card" style="position:relative" data-nav="ubicacion" data-id="${h.id}">
+            <div class="card-row">
+              <div class="card-icon">${h.icono||(esAmbiente?'🗄️':'📂')}</div>
+              <div class="card-info" style="margin-right:32px">
+                <div class="card-name">${h.nombre}</div>
+                <div class="card-meta">${subHijos.length?subHijos.length+' sectores · ':''} ${totalH+totalSub} ítems</div>
+              </div>
+              <div class="card-arrow">${svgChevron()}</div>
+            </div>
+            <div style="position:absolute;right:10px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:#fff8f5;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:3;font-size:14px" data-del-nodo="${h.id}" data-nombre="${h.nombre}">🗑</div>
+          </div>`;
+        }).join('')}
+      `:''}
+      ${objsAqui.length?`
+        <div class="section-label">Objetos</div>
+        ${objsAqui.map(o=>`
+          <div class="card" data-nav="ficha" data-id="${o.id}">
+            <div class="card-row">
+              <div class="card-icon">${TIPO_ICONS[o.tipo]||'📦'}</div>
+              <div class="card-info">
+                <div class="card-name">${o.nombre}</div>
+                <div class="card-meta">${o.tags&&o.tags.length?o.tags.map(t=>'#'+t).join(' '):o.tipo}</div>
+              </div>
+              <div class="card-qty">${o.cantidad}</div>
+            </div>
+          </div>`).join('')}
+      `:''}
+      ${!hijos.length&&!objsAqui.length?`<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">Vacío</div><div class="empty-sub">Tocá ➕ para agregar ${childType} u objeto</div></div>`:''}
+    </div>
+    <button class="fab" data-action="add-here">${svgPlus()}</button>
+    ${renderBottomNav('')}`;
+
+  el.querySelector('[data-action="add-here"]')?.addEventListener('click',()=>openAddHereMenu(id,childType,ubi.nombre,()=>Router.navigate('ubicacion',{id})));
+
+  el.querySelector('.content')?.addEventListener('click',async e=>{
+    const delBtn=e.target.closest('[data-del-nodo]');
+    if(delBtn){
+      e.stopPropagation();
+      const nid=delBtn.dataset.delNodo;
+      const nombre=delBtn.dataset.nombre;
+      if(!confirm(`¿Eliminar "${nombre}"?\nSe borrarán sus sectores y los objetos perderán esa ubicación.`))return;
+      await deleteUbicacionCascade(nid);
+      Router.navigate('ubicacion',{id});
+    }
+  });
+
+  attachNavEvents(el);
+};
+
+// ── OBJETOS (lista global) ──────────────────
+SCREENS.objetos = async(el,p)=>{
+  const [objs, exs, ubics] = await Promise.all([DB.getAll('objetos'),DB.getAll('existencias'),DB.getAll('ubicaciones')]);
+  let filtro = p?.filtro||'todos';
+
+  const renderLista = (lista)=>{
+    if(!lista.length)return`<div class="empty"><div class="empty-icon">📦</div><div class="empty-title">Sin resultados</div></div>`;
+    return lista.filter(o=>o.activo).map(o=>{
+      const oExs=exs.filter(e=>e.objetoId===o.id);
+      const total=oExs.reduce((a,e)=>a+e.cantidad,0);
+      return`<div class="card" data-nav="ficha" data-id="${o.id}">
+        <div class="card-row">
+          <div class="card-icon">${TIPO_ICONS[o.tipo]||'📦'}</div>
+          <div class="card-info">
+            <div class="card-name">${o.nombre}</div>
+            <div class="card-meta">${oExs.length} ubicación${oExs.length!==1?'es':''} · ${o.tipo}</div>
+          </div>
+          <div class="card-qty">${total}</div>
+        </div>
+      </div>`;
+    }).join('');
+  };
+
+  el.innerHTML=`
+    <div class="hdr">
+      <div class="hdr-back" data-back>${svgBack()}</div>
+      <div class="hdr-title">Objetos</div>
+      <div class="hdr-btn" data-nav="buscar">${svgSearch()}</div>
+    </div>
+    <div class="filter-row" style="padding:8px 16px 4px">
+      ${['todos','alimento','limpieza','higiene','ropa','congelado'].map(f=>`<div class="filter-chip${filtro===f?' active':''}" data-filter="${f}">${f.charAt(0).toUpperCase()+f.slice(1)}</div>`).join('')}
+    </div>
+    <div class="content" id="objs-lista">
+      ${renderLista(filtro==='todos'?objs:objs.filter(o=>o.tipo===filtro))}
+    </div>
+    <button class="fab" data-nav="alta" data-params='{"modo":"libre"}'>${svgPlus()}</button>
+    ${renderBottomNav('objetos')}`;
+
+  el.querySelectorAll('.filter-chip').forEach(c=>c.addEventListener('click',()=>{
+    filtro=c.dataset.filter;
+    el.querySelectorAll('.filter-chip').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active');
+    document.getElementById('objs-lista').innerHTML=renderLista(filtro==='todos'?objs:objs.filter(o=>o.tipo===filtro));
+    attachNavEvents(document.getElementById('objs-lista'));
+  }));
+  attachNavEvents(el);
+};
+
+// ── FICHA DE OBJETO ──────────────────────────
+SCREENS.ficha = async(el,p)=>{
+  const [obj, exs, ubics] = await Promise.all([DB.get('objetos',p.id),DB.getAll('existencias'),DB.getAll('ubicaciones')]);
+  if(!obj){el.innerHTML='<div class="empty"><div class="empty-title">No encontrado</div></div>';return;}
+
+  const map={}; ubics.forEach(u=>map[u.id]=u);
+  const oExs=exs.filter(e=>e.objetoId===obj.id);
+  const total=oExs.reduce((a,e)=>a+e.cantidad,0);
+
+  // Resolve paths
+  const pathsP = oExs.map(async e=>{
+    const chain=await getBreadcrumb(e.ubicacionId);
+    return{...e, path:chain.map(u=>u.nombre).join(' › ')};
+  });
+  const paths = await Promise.all(pathsP);
+
+  el.innerHTML=`
+    <div class="hdr">
+      <div class="hdr-back" data-back>${svgBack()}</div>
+      <div class="hdr-title">${obj.nombre}</div>
+      <div class="hdr-btn" data-action="edit">${svgEdit()}</div>
+    </div>
+    <div class="content">
+      <div class="ficha-header">
+        <div style="font-size:12px;color:var(--brown3);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:4px">${obj.tipo}</div>
+        <div class="ficha-total">${total}<span>unidades</span></div>
+        ${obj.notas?`<div style="font-size:13px;color:var(--brown3);margin-top:6px;font-style:italic">${obj.notas}</div>`:''}
+      </div>
+      ${obj.tags&&obj.tags.length?`<div class="ficha-tags">${obj.tags.map(t=>`<span class="tag">#${t}</span>`).join('')}</div>`:''}
+      <div class="gold-divider"></div>
+      <div class="section-label">Distribución</div>
+      ${paths.map(e=>`
+        <div class="distrib-item">
+          <div class="distrib-loc"><span class="distrib-dot"></span>${e.path}</div>
+          <div class="distrib-qty">${e.cantidad}</div>
+        </div>`).join('')}
+      <div class="gold-divider" style="margin-top:16px"></div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" style="font-size:13px" data-action="mover">↔ Mover</button>
+        <button class="btn btn-secondary" style="font-size:13px" data-action="ajustar">🔧 Ajustar</button>
+      </div>
+      ${oExs.length>1?`<button class="btn btn-secondary" data-action="unificar">🔀 Unificar</button>`:''}
+      <button class="btn btn-danger" data-action="archivar">Archivar objeto</button>
+    </div>
+    ${renderBottomNav('')}`;
+
+  el.querySelector('[data-action="mover"]')?.addEventListener('click',()=>openModalMover(obj,paths));
+  el.querySelector('[data-action="ajustar"]')?.addEventListener('click',()=>openModalAjustar(obj,paths,()=>Router.navigate('ficha',{id:obj.id})));
+  el.querySelector('[data-action="unificar"]')?.addEventListener('click',()=>openModalUnificar(obj,paths,()=>Router.navigate('ficha',{id:obj.id})));
+  el.querySelector('[data-action="archivar"]')?.addEventListener('click',async()=>{
+    if(!confirm(`¿Archivar "${obj.nombre}"?`))return;
+    obj.activo=false;
+    await DB.put('objetos',obj);
+    showToast(`"${obj.nombre}" archivado`);
+    Router.back();
+  });
+  el.querySelector('[data-action="edit"]')?.addEventListener('click',()=>openModalEditarObjeto(obj,()=>Router.navigate('ficha',{id:obj.id})));
+  attachNavEvents(el);
+};
+
+// ── ALTA DE OBJETO ───────────────────────────
+SCREENS.alta = async(el,p)=>{
+  const modo = p?.modo||'libre';
+  const ubicacionId = p?.ubicacionId||null;
+  const objs = await DB.getAll('objetos');
+  const ubics = await DB.getAll('ubicaciones');
+
+  let pathStr = '';
+  let ubicSeleccionada = ubicacionId;
+  if(ubicacionId){
+    const chain=await getBreadcrumb(ubicacionId);
+    pathStr=chain.map(u=>u.nombre).join(' › ');
+  }
+
+  let tags=[];
+  let autoList=[];
+
+  el.innerHTML=`
+    <div class="hdr">
+      <div class="hdr-back" data-back>${svgBack()}</div>
+      <div class="hdr-title">Nuevo objeto</div>
+    </div>
+    <div class="content" style="padding-bottom:12px">
+      ${ubicSeleccionada?`<div class="form-context"><span class="form-context-icon">📍</span><span class="form-context-text">${pathStr}</span></div>`:''}
+      <div class="form-group">
+        <label class="form-label">Nombre</label>
+        <div style="position:relative">
+          <input id="alta-nombre" class="form-input" placeholder="Ej: tornillos varios" autocomplete="off">
+          <div class="autocomplete-list" id="alta-auto"></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Cantidad</label>
+          <input id="alta-qty" class="form-input" type="number" value="1" min="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select id="alta-tipo" class="form-select">
+            ${TIPOS.map(t=>`<option value="${t}">${t.charAt(0).toUpperCase()+t.slice(1)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tags</label>
+        <div class="tags-wrap" id="tags-wrap">
+          <input type="text" class="tag-input-hidden" id="tag-input" placeholder="Agregar tag...">
+        </div>
+      </div>
+      ${!ubicSeleccionada?`
+        <div class="form-group">
+          <label class="form-label">Ubicación</label>
+          <div id="ubi-selector" class="form-input" style="cursor:pointer;color:var(--brown3)" data-action="pick-ubi">📍 Seleccionar ubicación</div>
+        </div>
+      `:''}
+      <div class="form-group">
+        <label class="form-label">Notas (opcional)</label>
+        <input id="alta-notas" class="form-input" placeholder="">
+      </div>
+      <div class="btn-row" style="padding-bottom:max(16px,env(safe-area-inset-bottom))">
+        <button class="btn btn-secondary" id="btn-guardar-seguir" style="font-size:13px;margin:0">Guardar y seguir</button>
+        <button class="btn btn-primary" id="btn-guardar" style="margin:0">Guardar</button>
+      </div>
+    </div>`;
+
+  // Autocomplete
+  const nombreInput=el.querySelector('#alta-nombre');
+  const autoEl=el.querySelector('#alta-auto');
+  nombreInput.addEventListener('input',()=>{
+    const v=nombreInput.value.trim().toLowerCase();
+    if(!v){autoEl.classList.remove('show');autoEl.innerHTML='';return;}
+    const matches=objs.filter(o=>o.activo&&o.nombre.toLowerCase().includes(v));
+    if(!matches.length){autoEl.classList.remove('show');return;}
+    autoEl.innerHTML=matches.slice(0,4).map(o=>`<div class="autocomplete-item" data-id="${o.id}" data-nombre="${o.nombre}">${o.nombre}</div>`).join('');
+    autoEl.classList.add('show');
+  });
+  autoEl.addEventListener('click',e=>{
+    const item=e.target.closest('.autocomplete-item');
+    if(!item)return;
+    nombreInput.value=item.dataset.nombre;
+    autoEl.classList.remove('show');
+    // Set tipo if possible
+    const obj=objs.find(o=>o.id===item.dataset.id);
+    if(obj){el.querySelector('#alta-tipo').value=obj.tipo;tags=obj.tags?[...obj.tags]:[];renderTags();}
+  });
+
+  // Tags
+  const tagInput=el.querySelector('#tag-input');
+  const tagsWrap=el.querySelector('#tags-wrap');
+  const renderTags=()=>{
+    const existing=tagsWrap.querySelectorAll('.tag-badge');
+    existing.forEach(t=>t.remove());
+    tags.forEach(t=>{
+      const b=document.createElement('span');
+      b.className='tag-badge';
+      b.innerHTML=`${t}<span class="tag-remove" data-t="${t}">×</span>`;
+      tagsWrap.insertBefore(b,tagInput);
+    });
+  };
+  tagInput.addEventListener('keydown',e=>{
+    if((e.key==='Enter'||e.key===','||e.key===' ')&&tagInput.value.trim()){
+      e.preventDefault();
+      const t=tagInput.value.trim().replace(/,/g,'').toLowerCase();
+      if(t&&!tags.includes(t)){tags.push(t);renderTags();}
+      tagInput.value='';
+    }
+  });
+  tagsWrap.addEventListener('click',e=>{
+    if(e.target.classList.contains('tag-remove')){
+      tags=tags.filter(t=>t!==e.target.dataset.t);
+      renderTags();
+    }
+  });
+
+  // Ubicación picker
+  if(!ubicSeleccionada){
+    el.querySelector('[data-action="pick-ubi"]')?.addEventListener('click',()=>{
+      openModalLocPicker(ubics,null,(id,path)=>{
+        ubicSeleccionada=id;
+        el.querySelector('#ubi-selector').textContent='📍 '+path;
+        el.querySelector('#ubi-selector').style.color='var(--brown)';
+      });
+    });
+  }
+
+  async function guardar(){
+    const nombre=el.querySelector('#alta-nombre').value.trim();
+    const qty=parseInt(el.querySelector('#alta-qty').value)||1;
+    const tipo=el.querySelector('#alta-tipo').value;
+    const notas=el.querySelector('#alta-notas').value.trim();
+    if(!nombre){showToast('Escribí un nombre');return null;}
+    if(!ubicSeleccionada){showToast('Seleccioná una ubicación');return null;}
+
+    // Find or create objeto
+    let obj=objs.find(o=>o.nombre.toLowerCase()===nombre.toLowerCase()&&o.activo);
+    if(!obj){
+      obj={id:uid(),nombre,tipo,tags,foto:null,notas,activo:true,fechaAlta:Date.now()};
+      await DB.put('objetos',obj);
+      objs.push(obj);
+    }
+    // Find or create existencia
+    const allEx=await DB.getAll('existencias');
+    let ex=allEx.find(e=>e.objetoId===obj.id&&e.ubicacionId===ubicSeleccionada);
+    if(ex){ex.cantidad+=qty;ex.fechaMovimiento=Date.now();}
+    else{ex={id:uid(),objetoId:obj.id,ubicacionId:ubicSeleccionada,cantidad:qty,fechaAlta:Date.now(),fechaMovimiento:Date.now()};}
+    await DB.put('existencias',ex);
+    // Historial
+    await DB.put('movimientos',{id:uid(),objetoId:obj.id,desdeUbicacionId:null,haciaUbicacionId:ubicSeleccionada,cantidad:qty,tipoMovimiento:'alta_manual',detalle:nombre,fecha:Date.now()});
+    return obj;
+  }
+
+  el.querySelector('#btn-guardar').addEventListener('click',async()=>{
+    const obj=await guardar();
+    if(obj){showToast(`"${obj.nombre}" guardado ✓`);Router.back();}
+  });
+  el.querySelector('#btn-guardar-seguir').addEventListener('click',async()=>{
+    const obj=await guardar();
+    if(obj){
+      showToast(`"${obj.nombre}" guardado ✓`);
+      el.querySelector('#alta-nombre').value='';
+      el.querySelector('#alta-qty').value='1';
+      el.querySelector('#alta-notas').value='';
+      tags=[];renderTags();
+      el.querySelector('#alta-nombre').focus();
+    }
+  });
+
+  attachNavEvents(el);
+};
+
+// ── BUSCAR ───────────────────────────────────
+SCREENS.buscar = async(el,p)=>{
+  const [objs,exs,ubics]=await Promise.all([DB.getAll('objetos'),DB.getAll('existencias'),DB.getAll('ubicaciones')]);
+
+  const renderResultados=async(q,tipo,tag)=>{
+    let res=objs.filter(o=>o.activo);
+    if(q)res=res.filter(o=>o.nombre.toLowerCase().includes(q)||(o.tags&&o.tags.some(t=>t.toLowerCase().includes(q))));
+    if(tipo&&tipo!=='todos')res=res.filter(o=>o.tipo===tipo);
+    if(tag)res=res.filter(o=>o.tags&&o.tags.includes(tag));
+    if(!res.length)return`<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">Sin resultados</div></div>`;
+    const items=await Promise.all(res.map(async o=>{
+      const oExs=exs.filter(e=>e.objetoId===o.id);
+      const total=oExs.reduce((a,e)=>a+e.cantidad,0);
+      return`<div class="card" data-nav="ficha" data-id="${o.id}">
+        <div class="card-row">
+          <div class="card-icon">${TIPO_ICONS[o.tipo]||'📦'}</div>
+          <div class="card-info">
+            <div class="card-name">${o.nombre}</div>
+            <div class="card-meta">${oExs.length} ubic. · ${o.tipo}${o.tags&&o.tags.length?' · '+o.tags.map(t=>'#'+t).join(' '):''}</div>
+          </div>
+          <div class="card-qty">${total}</div>
+        </div>
+      </div>`;
+    }));
+    return items.join('');
+  };
+
+  el.innerHTML=`
+    <div class="hdr">
+      <div class="hdr-back" data-back>${svgBack()}</div>
+      <div class="hdr-title">Buscar</div>
+    </div>
+    <div class="search-bar">
+      <div class="search-input-wrap">
+        ${svgSearch().replace('<svg','<svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--brown3);fill:none;stroke-width:2;stroke-linecap:round"')}
+        <input id="buscar-input" class="search-input" placeholder="Buscar por nombre, tag..." autofocus>
+      </div>
+      <div class="filter-row" style="margin-top:8px">
+        ${['todos','alimento','limpieza','higiene','ropa'].map(f=>`<div class="filter-chip${f==='todos'?' active':''}" data-tipo="${f}">${f.charAt(0).toUpperCase()+f.slice(1)}</div>`).join('')}
+      </div>
+    </div>
+    <div class="content" id="buscar-res">
+      <div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">Escribí para buscar</div></div>
+    </div>
+    ${renderBottomNav('buscar')}`;
+
+  let tipoFiltro='todos';
+  const resEl=el.querySelector('#buscar-res');
+  const input=el.querySelector('#buscar-input');
+
+  const update=async()=>{
+    resEl.innerHTML=await renderResultados(input.value.trim().toLowerCase(),tipoFiltro,'');
+    attachNavEvents(resEl);
+  };
+
+  input.addEventListener('input',update);
+  el.querySelectorAll('.filter-chip').forEach(c=>c.addEventListener('click',()=>{
+    tipoFiltro=c.dataset.tipo;
+    el.querySelectorAll('.filter-chip').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active');
+    update();
+  }));
+
+  if(p?.q){input.value=p.q;update();}
+  attachNavEvents(el);
+};
+
+// ── RECIENTES ────────────────────────────────
+SCREENS.recientes = async(el,p)=>{
+  const [movs,objs]=await Promise.all([DB.getAll('movimientos'),DB.getAll('objetos')]);
+  const sorted=movs.sort((a,b)=>b.fecha-a.fecha).slice(0,50);
+
+  const getObjNombre=id=>{const o=objs.find(x=>x.id===id);return o?o.nombre:'?';};
+  const getTipoLabel=t=>({alta_manual:'Creaste',alta_inicial:'Carga inicial',import_csv:'Importaste',mover:'Moviste',ajuste:'Ajustaste',unificar:'Unificaste',baja:'Archivaste'}[t]||t);
+  const getClass=t=>({alta_manual:'alta',alta_inicial:'alta',import_csv:'import',mover:'mover',ajuste:'ajuste',unificar:'mover',baja:'ajuste'}[t]||'ajuste');
+
+  el.innerHTML=`
+    <div class="hdr">
+      <div class="hdr-back" data-back>${svgBack()}</div>
+      <div class="hdr-title">Recientes</div>
+    </div>
+    <div class="content">
+      ${sorted.length?sorted.map(m=>`
+        <div class="hist-item" data-nav="ficha" data-id="${m.objetoId}" style="cursor:pointer">
+          <div class="hist-icon ${getClass(m.tipoMovimiento)}">${MOV_ICONS[m.tipoMovimiento]||'•'}</div>
+          <div class="hist-text">
+            <div class="hist-main"><strong>${getTipoLabel(m.tipoMovimiento)}</strong> "${getObjNombre(m.objetoId)}"${m.cantidad?` · ${m.cantidad} u.`:''}</div>
+            <div class="hist-date">${fmtFull(m.fecha)}</div>
+          </div>
+        </div>`).join(''):`<div class="empty"><div class="empty-icon">🕓</div><div class="empty-title">Sin actividad todavía</div><div class="empty-sub">Las acciones aparecerán acá</div></div>`}
+    </div>
+    ${renderBottomNav('recientes')}`;
+
+  attachNavEvents(el);
+};
+
+// ── CARGA INICIAL ────────────────────────────
+SCREENS.cargaInicial = async(el,p)=>{
+  const ubics=await DB.getAll('ubicaciones');
+  const objs=await DB.getAll('objetos');
+  let ubicFija=p?.ubicacionId||null;
+  let tags=[];
+  let pathStr='Sin seleccionar';
+
+  if(ubicFija){const chain=await getBreadcrumb(ubicFija);pathStr=chain.map(u=>u.nombre).join(' › ');}
+
+  const renderTags=(wrap,input)=>{
+    wrap.querySelectorAll('.tag-badge').forEach(t=>t.remove());
+    tags.forEach(t=>{
+      const b=document.createElement('span');b.className='tag-badge';
+      b.innerHTML=`${t}<span class="tag-remove" data-t="${t}">×</span>`;
+      wrap.insertBefore(b,input);
+    });
+  };
+
+  el.innerHTML=`
+    <div class="hdr">
+      <div class="hdr-back" data-back>${svgBack()}</div>
+      <div class="hdr-title">Carga rápida</div>
+    </div>
+    <div class="content" style="padding-bottom:12px">
+      <div class="form-context" id="ctx-ubi" style="cursor:pointer" data-action="pick-ubi">
+        <span class="form-context-icon">📍</span>
+        <span class="form-context-text" id="ctx-text">${pathStr}</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Objeto</label>
+        <input id="ci-nombre" class="form-input" placeholder="Nombre del objeto" autocomplete="off">
+        <div class="autocomplete-list" id="ci-auto"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Cantidad</label>
+          <input id="ci-qty" class="form-input" type="number" value="1" min="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select id="ci-tipo" class="form-select">
+            ${TIPOS.map(t=>`<option value="${t}">${t.charAt(0).toUpperCase()+t.slice(1)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tags</label>
+        <div class="tags-wrap" id="ci-tags-wrap">
+          <input type="text" class="tag-input-hidden" id="ci-tag-input" placeholder="Agregar tag...">
+        </div>
+      </div>
+      <button class="btn btn-primary" id="ci-btn" style="margin-top:8px">Guardar y seguir →</button>
+      <button class="btn btn-secondary" id="ci-cambiar-ubi" style="margin-bottom:max(16px,env(safe-area-inset-bottom))">Cambiar ubicación</button>
+    </div>`;
+
+  // Autocomplete
+  const nombreInput=el.querySelector('#ci-nombre');
+  const autoEl=el.querySelector('#ci-auto');
+  nombreInput.addEventListener('input',()=>{
+    const v=nombreInput.value.trim().toLowerCase();
+    if(!v){autoEl.classList.remove('show');return;}
+    const matches=objs.filter(o=>o.activo&&o.nombre.toLowerCase().includes(v));
+    if(!matches.length){autoEl.classList.remove('show');return;}
+    autoEl.innerHTML=matches.slice(0,4).map(o=>`<div class="autocomplete-item" data-id="${o.id}" data-nombre="${o.nombre}">${o.nombre}</div>`).join('');
+    autoEl.classList.add('show');
+  });
+  autoEl.addEventListener('click',e=>{
+    const item=e.target.closest('.autocomplete-item');
+    if(!item)return;
+    nombreInput.value=item.dataset.nombre;
+    autoEl.classList.remove('show');
+  });
+
+  // Tags
+  const tagsWrap=el.querySelector('#ci-tags-wrap');
+  const tagInput=el.querySelector('#ci-tag-input');
+  tagInput.addEventListener('keydown',e=>{
+    if((e.key==='Enter'||e.key===','||e.key===' ')&&tagInput.value.trim()){
+      e.preventDefault();const t=tagInput.value.trim().replace(/,/g,'').toLowerCase();
+      if(t&&!tags.includes(t)){tags.push(t);renderTags(tagsWrap,tagInput);}
+      tagInput.value='';
+    }
+  });
+  tagsWrap.addEventListener('click',e=>{
+    if(e.target.classList.contains('tag-remove')){tags=tags.filter(t=>t!==e.target.dataset.t);renderTags(tagsWrap,tagInput);}
+  });
+
+  const pickUbi=()=>openModalLocPicker(ubics,null,async(id,path)=>{
+    ubicFija=id;pathStr=path;
+    el.querySelector('#ctx-text').textContent=path;
+  });
+  el.querySelector('[data-action="pick-ubi"]')?.addEventListener('click',pickUbi);
+  el.querySelector('#ci-cambiar-ubi')?.addEventListener('click',pickUbi);
+
+  el.querySelector('#ci-btn').addEventListener('click',async()=>{
+    const nombre=nombreInput.value.trim();
+    const qty=parseInt(el.querySelector('#ci-qty').value)||1;
+    const tipo=el.querySelector('#ci-tipo').value;
+    if(!nombre){showToast('Escribí un nombre');return;}
+    if(!ubicFija){showToast('Seleccioná una ubicación');return;}
+    let obj=objs.find(o=>o.nombre.toLowerCase()===nombre.toLowerCase()&&o.activo);
+    if(!obj){
+      obj={id:uid(),nombre,tipo,tags:[...tags],foto:null,notas:'',activo:true,fechaAlta:Date.now()};
+      await DB.put('objetos',obj);objs.push(obj);
+    }
+    const allEx=await DB.getAll('existencias');
+    let ex=allEx.find(e=>e.objetoId===obj.id&&e.ubicacionId===ubicFija);
+    if(ex){ex.cantidad+=qty;ex.fechaMovimiento=Date.now();}
+    else{ex={id:uid(),objetoId:obj.id,ubicacionId:ubicFija,cantidad:qty,fechaAlta:Date.now(),fechaMovimiento:Date.now()};}
+    await DB.put('existencias',ex);
+    await DB.put('movimientos',{id:uid(),objetoId:obj.id,desdeUbicacionId:null,haciaUbicacionId:ubicFija,cantidad:qty,tipoMovimiento:'alta_inicial',detalle:nombre,fecha:Date.now()});
+    showToast(`"${nombre}" guardado ✓`);
+    nombreInput.value='';el.querySelector('#ci-qty').value='1';tags=[];renderTags(tagsWrap,tagInput);nombreInput.focus();
+  });
+
+  attachNavEvents(el);
+};
+
+// ── SETTINGS ────────────────────────────────
+SCREENS.settings = async(el,p)=>{
+  const [objs,ubics,exs,movs]=await Promise.all([DB.getAll('objetos'),DB.getAll('ubicaciones'),DB.getAll('existencias'),DB.getAll('movimientos')]);
+
+  el.innerHTML=`
+    <div class="hdr">
+      <div class="hdr-back" data-back>${svgBack()}</div>
+      <div class="hdr-title">Ajustes</div>
+    </div>
+    <div class="content">
+      <div class="settings-section-label">Datos</div>
+      <div class="settings-item" data-action="export-json">
+        <div class="settings-icon" style="background:#e8f5e9">📤</div>
+        <div class="settings-label">
+          <div class="settings-title">Exportar JSON</div>
+          <div class="settings-sub">Backup completo de todos los datos</div>
+        </div>
+        <div class="settings-chevron">${svgChevron()}</div>
+      </div>
+      <div class="settings-item" data-action="export-csv">
+        <div class="settings-icon" style="background:#e3f2fd">📊</div>
+        <div class="settings-label">
+          <div class="settings-title">Exportar CSV</div>
+          <div class="settings-sub">Lista de objetos con ubicaciones para Excel</div>
+        </div>
+        <div class="settings-chevron">${svgChevron()}</div>
+      </div>
+      <div class="settings-item" data-action="import-csv">
+        <div class="settings-icon" style="background:#fff8e1">📥</div>
+        <div class="settings-label">
+          <div class="settings-title">Importar CSV</div>
+          <div class="settings-sub">Carga masiva desde planilla</div>
+        </div>
+        <div class="settings-chevron">${svgChevron()}</div>
+      </div>
+
+      <div class="settings-section-label">Diagnóstico</div>
+      <div class="settings-item" style="cursor:default">
+        <div class="settings-icon" style="background:var(--bg2)">📦</div>
+        <div class="settings-label">
+          <div class="settings-title">Objetos activos</div>
+          <div class="settings-sub">${objs.filter(o=>o.activo).length} objetos · ${exs.length} existencias</div>
+        </div>
+      </div>
+      <div class="settings-item" style="cursor:default">
+        <div class="settings-icon" style="background:var(--bg2)">🏠</div>
+        <div class="settings-label">
+          <div class="settings-title">Estructura</div>
+          <div class="settings-sub">${ubics.filter(u=>!u.parentId).length} ambientes · ${ubics.length} nodos totales</div>
+        </div>
+      </div>
+      <div class="settings-item" style="cursor:default">
+        <div class="settings-icon" style="background:var(--bg2)">🕓</div>
+        <div class="settings-label">
+          <div class="settings-title">Historial</div>
+          <div class="settings-sub">${movs.length} movimientos registrados</div>
+        </div>
+      </div>
+
+      <div class="settings-section-label">Zona de peligro</div>
+      <div class="settings-item" data-action="borrar-demo">
+        <div class="settings-icon" style="background:#fff3e0">🧹</div>
+        <div class="settings-label">
+          <div class="settings-title">Borrar datos demo</div>
+          <div class="settings-sub">Elimina los datos de ejemplo precargados</div>
+        </div>
+        <div class="settings-chevron">${svgChevron()}</div>
+      </div>
+      <div class="settings-item" data-action="reset-total">
+        <div class="settings-icon" style="background:#ffebee">💥</div>
+        <div class="settings-label">
+          <div class="settings-title">Reset total</div>
+          <div class="settings-sub">Borra absolutamente todo y empieza de cero</div>
+        </div>
+        <div class="settings-chevron">${svgChevron()}</div>
+      </div>
+
+      <div style="padding:24px 16px 8px;text-align:center;color:var(--brown4);font-size:12px">
+        Ordo v1.0 · Todo en su lugar
+      </div>
+    </div>
+    ${renderBottomNav('')}`;
+
+  el.querySelector('[data-action="export-json"]')?.addEventListener('click',async()=>{
+    const data={objetos:objs,ubicaciones:ubics,existencias:exs,movimientos:movs,exportado:Date.now()};
+    downloadFile(JSON.stringify(data,null,2),'ordo-backup.json','application/json');
+    showToast('JSON exportado ✓');
+  });
+
+  el.querySelector('[data-action="export-csv"]')?.addEventListener('click',async()=>{
+    const lines=['objeto,cantidad,ambiente,mueble,sector,tags'];
+    const map={}; ubics.forEach(u=>map[u.id]=u);
+    for(const ex of exs){
+      const obj=objs.find(o=>o.id===ex.objetoId);
+      if(!obj||!obj.activo)continue;
+      const chain=[];
+      let cur=map[ex.ubicacionId];
+      while(cur){chain.unshift(cur);cur=cur.parentId?map[cur.parentId]:null;}
+      const amb=chain[0]?.nombre||'';
+      const mue=chain[1]?.nombre||'';
+      const sec=chain[2]?.nombre||'';
+      lines.push([obj.nombre,ex.cantidad,amb,mue,sec,(obj.tags||[]).join(' ')].join(','));
+    }
+    downloadFile(lines.join('\n'),'ordo-objetos.csv','text/csv');
+    showToast('CSV exportado ✓');
+  });
+
+  el.querySelector('[data-action="import-csv"]')?.addEventListener('click',()=>Router.navigate('importarCSV'));
+
+  el.querySelector('[data-action="borrar-demo"]')?.addEventListener('click',async()=>{
+    if(!confirm('¿Borrar los datos de ejemplo? Esto es irreversible.'))return;
+    // Delete objects with "alta_inicial" movements only
+    const movInitial=movs.filter(m=>m.tipoMovimiento==='alta_inicial');
+    const objsDemo=new Set(movInitial.map(m=>m.objetoId));
+    // Check none have been manually modified
+    const movManual=movs.filter(m=>m.tipoMovimiento!=='alta_inicial');
+    const objsModified=new Set(movManual.map(m=>m.objetoId));
+    let borrados=0;
+    for(const id of objsDemo){
+      if(objsModified.has(id))continue; // was modified, keep
+      const oExs=exs.filter(e=>e.objetoId===id);
+      for(const e of oExs)await DB.delete('existencias',e.id);
+      const oMovs=movs.filter(m=>m.objetoId===id);
+      for(const m of oMovs)await DB.delete('movimientos',m.id);
+      await DB.delete('objetos',id);
+      borrados++;
+    }
+    showToast(`${borrados} objetos demo borrados`);
+    Router.navigate('dashboard');
+  });
+
+  el.querySelector('[data-action="reset-total"]')?.addEventListener('click',async()=>{
+    if(!confirm('⚠️ RESET TOTAL\n\nBorrará todos los objetos, ubicaciones, historial y existencias.\n\n¿Estás seguro?'))return;
+    if(!confirm('Segunda confirmación: ¿borrar TODO?'))return;
+    const [aObjs,aUbics,aExs,aMovs]=await Promise.all([DB.getAll('objetos'),DB.getAll('ubicaciones'),DB.getAll('existencias'),DB.getAll('movimientos')]);
+    for(const o of aObjs)await DB.delete('objetos',o.id);
+    for(const u of aUbics)await DB.delete('ubicaciones',u.id);
+    for(const e of aExs)await DB.delete('existencias',e.id);
+    for(const m of aMovs)await DB.delete('movimientos',m.id);
+    showToast('Base de datos limpia ✓');
+    Router.navigate('dashboard');
+  });
+
+  attachNavEvents(el);
+};
+
+// ── IMPORTAR CSV ─────────────────────────────
+SCREENS.importarCSV = async(el,p)=>{
+  el.innerHTML=`
+    <div class="hdr">
+      <div class="hdr-back" data-back>${svgBack()}</div>
+      <div class="hdr-title">Importar CSV</div>
+    </div>
+    <div class="content" style="padding-bottom:12px">
+      <div style="padding:16px;background:var(--card);margin:16px;border-radius:var(--r);border:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--brown3);margin-bottom:8px">Formato esperado</div>
+        <div style="font-family:monospace;font-size:12px;color:var(--brown2);line-height:1.7">objeto,cantidad,ambiente,mueble,sector,tags<br>tornillos varios,20,dormitorio,chifonier,cajon 3,herramientas<br>arroz,1,cocina,alacena,estante medio,alimento</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Archivo CSV</label>
+        <input id="csv-file" type="file" accept=".csv,.txt" class="form-input" style="padding:10px">
+      </div>
+      <div id="csv-preview" style="padding:0 16px;display:none">
+        <div style="font-size:13px;font-weight:700;color:var(--brown2);margin-bottom:8px">Vista previa</div>
+        <div id="csv-preview-content"></div>
+      </div>
+      <button class="btn btn-primary" id="csv-import-btn" disabled style="opacity:.5;margin-top:12px;margin-bottom:max(16px,env(safe-area-inset-bottom))">Importar</button>
+    </div>`;
+
+  let csvData=[];
+  el.querySelector('#csv-file').addEventListener('change',e=>{
+    const file=e.target.files[0];
+    if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const lines=ev.target.result.trim().split('\n');
+      const header=lines[0].toLowerCase().split(',');
+      csvData=lines.slice(1).map(l=>{
+        const cols=l.split(',');
+        return{objeto:cols[0]?.trim(),cantidad:parseInt(cols[1])||1,ambiente:cols[2]?.trim(),mueble:cols[3]?.trim(),sector:cols[4]?.trim(),tags:cols[5]?.trim()||''};
+      }).filter(r=>r.objeto&&r.ambiente);
+      const prev=el.querySelector('#csv-preview');
+      const pc=el.querySelector('#csv-preview-content');
+      pc.innerHTML=`<div style="font-size:13px;color:var(--brown3)">${csvData.length} registros detectados</div>${csvData.slice(0,5).map(r=>`<div style="font-size:12px;color:var(--brown2);padding:4px 0;border-bottom:1px solid var(--border)">${r.objeto} × ${r.cantidad} → ${[r.ambiente,r.mueble,r.sector].filter(Boolean).join(' › ')}</div>`).join('')}${csvData.length>5?`<div style="font-size:12px;color:var(--brown4);padding-top:4px">... y ${csvData.length-5} más</div>`:''}`;
+      prev.style.display='block';
+      el.querySelector('#csv-import-btn').disabled=false;
+      el.querySelector('#csv-import-btn').style.opacity='1';
+    };
+    reader.readAsText(file);
+  });
+
+  el.querySelector('#csv-import-btn').addEventListener('click',async()=>{
+    if(!csvData.length)return;
+    const ubics=await DB.getAll('ubicaciones');
+    const objsAll=await DB.getAll('objetos');
+    const exsAll=await DB.getAll('existencias');
+    const map={}; ubics.forEach(u=>map[u.id]=u);
+    let imported=0;
+
+    for(const row of csvData){
+      // Find or create ambiente
+      let amb=ubics.find(u=>!u.parentId&&u.nombre.toLowerCase()===row.ambiente.toLowerCase());
+      if(!amb){amb={id:uid(),nombre:row.ambiente,tipo:'ambiente',parentId:null,orden:Date.now()};await DB.put('ubicaciones',amb);ubics.push(amb);}
+      // Find or create mueble
+      let ubicId=amb.id;
+      if(row.mueble){
+        let mue=ubics.find(u=>u.parentId===amb.id&&u.nombre.toLowerCase()===row.mueble.toLowerCase());
+        if(!mue){mue={id:uid(),nombre:row.mueble,tipo:'mueble',parentId:amb.id,orden:Date.now()};await DB.put('ubicaciones',mue);ubics.push(mue);}
+        ubicId=mue.id;
+        if(row.sector){
+          let sec=ubics.find(u=>u.parentId===mue.id&&u.nombre.toLowerCase()===row.sector.toLowerCase());
+          if(!sec){sec={id:uid(),nombre:row.sector,tipo:'sector',parentId:mue.id,orden:Date.now()};await DB.put('ubicaciones',sec);ubics.push(sec);}
+          ubicId=sec.id;
+        }
+      }
+      // Find or create objeto
+      let obj=objsAll.find(o=>o.nombre.toLowerCase()===row.objeto.toLowerCase()&&o.activo);
+      if(!obj){
+        const tags=row.tags?row.tags.split(' ').filter(Boolean):[];
+        obj={id:uid(),nombre:row.objeto,tipo:'general',tags,foto:null,notas:'',activo:true,fechaAlta:Date.now()};
+        await DB.put('objetos',obj);objsAll.push(obj);
+      }
+      // Find or create existencia
+      let ex=exsAll.find(e=>e.objetoId===obj.id&&e.ubicacionId===ubicId);
+      if(ex){ex.cantidad+=row.cantidad;ex.fechaMovimiento=Date.now();await DB.put('existencias',ex);}
+      else{ex={id:uid(),objetoId:obj.id,ubicacionId:ubicId,cantidad:row.cantidad,fechaAlta:Date.now(),fechaMovimiento:Date.now()};await DB.put('existencias',ex);exsAll.push(ex);}
+      await DB.put('movimientos',{id:uid(),objetoId:obj.id,desdeUbicacionId:null,haciaUbicacionId:ubicId,cantidad:row.cantidad,tipoMovimiento:'import_csv',detalle:row.objeto,fecha:Date.now()});
+      imported++;
+    }
+    showToast(`${imported} registros importados ✓`);
+    Router.navigate('dashboard');
+  });
+
+  attachNavEvents(el);
+};
+
+// ─────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────
+
+function downloadFile(content,filename,mime){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([content],{type:mime}));
+  a.download=filename;
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
+}
+
+async function deleteUbicacionCascade(id){
+  // Get all descendants
+  const ubics=await DB.getAll('ubicaciones');
+  const toDelete=[id];
+  const addChildren=(pid)=>{ubics.filter(u=>u.parentId===pid).forEach(u=>{toDelete.push(u.id);addChildren(u.id);});};
+  addChildren(id);
+  // Delete existencias pointing to any of these
+  const exs=await DB.getAll('existencias');
+  for(const e of exs){if(toDelete.includes(e.ubicacionId))await DB.delete('existencias',e.id);}
+  // Delete ubicaciones
+  for(const uid_ of toDelete)await DB.delete('ubicaciones',uid_);
+}
+
+const EMOJIS_AMBIENTE=['🍳','🛏️','🚿','🛋️','🧺','🛠️','🚗','💻','🌿','📚','🎮','🍷','🧸','🎨','🚪'];
+const EMOJIS_MUEBLE=['🗄️','📦','🚪','🪑','🧰','🪞','🛁','🛏️','📂','🗃️','🪣','🧲','📟','🔧','🗂️'];
+
+
+
+function openModal(html,onShow){
+  const ov=document.getElementById('modal-overlay');
+  const mc=document.getElementById('modal-content');
+  mc.innerHTML=`<div class="modal-handle"></div>${html}`;
+  ov.classList.add('show');
+  if(onShow)requestAnimationFrame(()=>onShow(mc));
+}
+
+function closeModal(e){
+  if(e&&e.target!==document.getElementById('modal-overlay'))return;
+  document.getElementById('modal-overlay').classList.remove('show');
+}
+function forceCloseModal(){document.getElementById('modal-overlay').classList.remove('show');}
+
+// Nuevo nodo (ambiente/mueble/sector)
+function openModalNuevoNodo(parentId,tipo,onDone){
+  const emojis=tipo==='ambiente'?EMOJIS_AMBIENTE:tipo==='mueble'?EMOJIS_MUEBLE:null;
+  let selectedEmoji=emojis?emojis[0]:null;
+
+  openModal(`
+    <div class="modal-title">Nuevo ${tipo}</div>
+    <div class="form-group">
+      <label class="form-label">Nombre</label>
+      <input id="mn-nombre" class="form-input" placeholder="Ej: ${tipo==='ambiente'?'Cocina':tipo==='mueble'?'Alacena':'Estante alto'}">
+    </div>
+    ${emojis?`
+      <div class="form-group" style="padding-bottom:8px">
+        <label class="form-label">Ícono</label>
+      </div>
+      <div class="emoji-grid" id="emoji-grid">
+        ${emojis.map(e=>`<div class="emoji-opt${e===selectedEmoji?' selected':''}" data-emoji="${e}">${e}</div>`).join('')}
+      </div>
+    `:''}
+    <button class="btn btn-primary" id="mn-btn" style="margin-top:4px">Crear ${tipo}</button>
+    <div style="height:max(8px,env(safe-area-inset-bottom))"></div>
+  `,mc=>{
+    mc.querySelector('#mn-nombre').focus();
+    if(emojis){
+      mc.querySelector('#emoji-grid').addEventListener('click',e=>{
+        const opt=e.target.closest('.emoji-opt');
+        if(!opt)return;
+        selectedEmoji=opt.dataset.emoji;
+        mc.querySelectorAll('.emoji-opt').forEach(x=>x.classList.remove('selected'));
+        opt.classList.add('selected');
+      });
+    }
+    mc.querySelector('#mn-btn').addEventListener('click',async()=>{
+      const nombre=mc.querySelector('#mn-nombre').value.trim();
+      if(!nombre){showToast('Escribí un nombre');return;}
+      await DB.put('ubicaciones',{id:uid(),nombre,tipo,parentId,icono:selectedEmoji||null,orden:Date.now()});
+      forceCloseModal();
+      showToast(`${nombre} creado ✓`);
+      if(onDone)onDone();
+    });
+  });
+}
+
+// Menu "agregar aquí"
+function openAddHereMenu(ubicId,childType,ubicNombre,onDone){
+  openModal(`
+    <div class="modal-title">Agregar en ${ubicNombre}</div>
+    <button class="btn btn-secondary" id="add-child">📂 Nuevo ${childType}</button>
+    <button class="btn btn-primary" id="add-obj">📦 Nuevo objeto aquí</button>
+    <div style="height:max(8px,env(safe-area-inset-bottom))"></div>
+  `,mc=>{
+    mc.querySelector('#add-child').addEventListener('click',()=>{
+      forceCloseModal();
+      setTimeout(()=>openModalNuevoNodo(ubicId,childType,onDone),200);
+    });
+    mc.querySelector('#add-obj').addEventListener('click',()=>{
+      forceCloseModal();
+      setTimeout(()=>Router.navigate('alta',{ubicacionId:ubicId}),200);
+    });
+  });
+}
+
+// Mover objeto
+function openModalMover(obj,paths){
+  let desdeEx=paths[0];
+  let haciaId=null;
+  let qty=desdeEx.cantidad;
+
+  const renderDesde=(mc)=>{
+    mc.querySelector('#mover-desde').innerHTML=paths.map((e,i)=>`
+      <div class="loc-option${e.id===desdeEx.id?' selected':''}" data-idx="${i}">
+        <div class="loc-option-name">${e.path} (${e.cantidad})</div>
+        <div class="loc-option-check"></div>
+      </div>`).join('');
+    mc.querySelectorAll('[data-idx]').forEach(el=>el.addEventListener('click',()=>{
+      desdeEx=paths[parseInt(el.dataset.idx)];
+      qty=desdeEx.cantidad;
+      mc.querySelector('#mover-qty').value=qty;
+      mc.querySelector('#mover-max').textContent=`Máx: ${desdeEx.cantidad}`;
+      renderDesde(mc);
+    }));
+  };
+
+  openModal(`
+    <div class="modal-title">Mover: ${obj.nombre}</div>
+    <div class="loc-level">
+      <div class="loc-level-label">Desde</div>
+      <div id="mover-desde"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Cantidad a mover</label>
+      <div class="qty-input-wrap">
+        <div class="qty-btn" id="qty-minus">−</div>
+        <div class="qty-val" id="mover-qty">${qty}</div>
+        <div class="qty-btn" id="qty-plus">+</div>
+      </div>
+      <div class="qty-max" id="mover-max">Máx: ${desdeEx.cantidad}</div>
+    </div>
+    <div class="loc-level">
+      <div class="loc-level-label">Hacia</div>
+      <div id="mover-hacia-val" class="loc-option" style="cursor:pointer" data-action="pick-hacia">
+        <div class="loc-option-name" style="color:var(--brown3)">Seleccionar ubicación...</div>
+        <div class="loc-option-check"></div>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="mover-btn">Confirmar movimiento</button>
+    <div style="height:max(8px,env(safe-area-inset-bottom))"></div>
+  `,async mc=>{
+    renderDesde(mc);
+    const ubics=await DB.getAll('ubicaciones');
+    mc.querySelector('#mover-hacia-val').addEventListener('click',()=>{
+      openModalLocPicker(ubics,null,(id,path)=>{
+        haciaId=id;
+        mc.querySelector('#mover-hacia-val').innerHTML=`<div class="loc-option-name">${path}</div><div class="loc-option-check" style="background:var(--gold);border-color:var(--gold)"><span style="width:6px;height:6px;border-radius:50%;background:#fff;display:block;margin:auto"></span></div>`;
+      });
+    });
+    mc.querySelector('#qty-minus').addEventListener('click',()=>{
+      if(qty>1){qty--;mc.querySelector('#mover-qty').textContent=qty;}
+    });
+    mc.querySelector('#qty-plus').addEventListener('click',()=>{
+      if(qty<desdeEx.cantidad){qty++;mc.querySelector('#mover-qty').textContent=qty;}
+    });
+    mc.querySelector('#mover-btn').addEventListener('click',async()=>{
+      if(!haciaId){showToast('Seleccioná destino');return;}
+      if(haciaId===desdeEx.ubicacionId){showToast('El origen y destino son iguales');return;}
+      // Update desde
+      const exOrig=await DB.get('existencias',desdeEx.id);
+      exOrig.cantidad-=qty;
+      if(exOrig.cantidad<=0)await DB.delete('existencias',exOrig.id);
+      else await DB.put('existencias',exOrig);
+      // Update hacia
+      const allEx=await DB.getAll('existencias');
+      let exDest=allEx.find(e=>e.objetoId===obj.id&&e.ubicacionId===haciaId);
+      if(exDest){exDest.cantidad+=qty;exDest.fechaMovimiento=Date.now();await DB.put('existencias',exDest);}
+      else await DB.put('existencias',{id:uid(),objetoId:obj.id,ubicacionId:haciaId,cantidad:qty,fechaAlta:Date.now(),fechaMovimiento:Date.now()});
+      // Historial
+      await DB.put('movimientos',{id:uid(),objetoId:obj.id,desdeUbicacionId:desdeEx.ubicacionId,haciaUbicacionId:haciaId,cantidad:qty,tipoMovimiento:'mover',detalle:'',fecha:Date.now()});
+      forceCloseModal();
+      showToast(`Movido: ${qty} u. ✓`);
+      Router.navigate('ficha',{id:obj.id});
+    });
+  });
+}
+
+// Ajustar cantidad
+function openModalAjustar(obj,paths,onDone){
+  let exSel=paths[0];
+  openModal(`
+    <div class="modal-title">Ajustar cantidad</div>
+    ${paths.length>1?`<div class="loc-level"><div class="loc-level-label">Ubicación</div>${paths.map((e,i)=>`<div class="loc-option${i===0?' selected':''}" data-idx="${i}"><div class="loc-option-name">${e.path}</div><div class="loc-option-check"></div></div>`).join('')}</div>`:''}
+    <div class="form-group">
+      <label class="form-label">Nueva cantidad (actual: ${exSel.cantidad})</label>
+      <div class="qty-input-wrap">
+        <div class="qty-btn" id="adj-minus">−</div>
+        <input id="adj-val" class="form-input" type="number" min="0" value="${exSel.cantidad}" style="border:none;background:none;text-align:center;font-family:var(--serif);font-size:28px;font-weight:700;padding:0">
+        <div class="qty-btn" id="adj-plus">+</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="adj-btn">Guardar</button>
+    <div style="height:max(8px,env(safe-area-inset-bottom))"></div>
+  `,mc=>{
+    if(paths.length>1){
+      mc.querySelectorAll('[data-idx]').forEach(el=>el.addEventListener('click',()=>{
+        exSel=paths[parseInt(el.dataset.idx)];
+        mc.querySelector('#adj-val').value=exSel.cantidad;
+        mc.querySelectorAll('[data-idx]').forEach(x=>x.classList.remove('selected'));
+        el.classList.add('selected');
+      }));
+    }
+    mc.querySelector('#adj-minus').addEventListener('click',()=>{const v=parseInt(mc.querySelector('#adj-val').value)||0;if(v>0)mc.querySelector('#adj-val').value=v-1;});
+    mc.querySelector('#adj-plus').addEventListener('click',()=>{const v=parseInt(mc.querySelector('#adj-val').value)||0;mc.querySelector('#adj-val').value=v+1;});
+    mc.querySelector('#adj-btn').addEventListener('click',async()=>{
+      const nueva=parseInt(mc.querySelector('#adj-val').value)||0;
+      const diff=nueva-exSel.cantidad;
+      if(diff===0){forceCloseModal();return;}
+      if(nueva<=0){await DB.delete('existencias',exSel.id);}
+      else{const ex=await DB.get('existencias',exSel.id);ex.cantidad=nueva;ex.fechaMovimiento=Date.now();await DB.put('existencias',ex);}
+      await DB.put('movimientos',{id:uid(),objetoId:obj.id,desdeUbicacionId:exSel.ubicacionId,haciaUbicacionId:exSel.ubicacionId,cantidad:Math.abs(diff),tipoMovimiento:'ajuste',detalle:`${exSel.cantidad}→${nueva}`,fecha:Date.now()});
+      forceCloseModal();showToast('Cantidad actualizada ✓');
+      if(onDone)onDone();
+    });
+  });
+}
+
+// Unificar
+function openModalUnificar(obj,paths,onDone){
+  let selIds=new Set(paths.map(e=>e.id));
+  let haciaId=null;
+  openModal(`
+    <div class="modal-title">Unificar: ${obj.nombre}</div>
+    <div class="loc-level">
+      <div class="loc-level-label">Fuentes</div>
+      ${paths.map(e=>`<div class="loc-option selected" data-exid="${e.id}"><div class="loc-option-name">${e.path} (${e.cantidad})</div><div class="loc-option-check"></div></div>`).join('')}
+    </div>
+    <div class="loc-level">
+      <div class="loc-level-label">Destino</div>
+      <div id="uni-hacia" class="loc-option" style="cursor:pointer" data-action="pick-hacia">
+        <div class="loc-option-name" style="color:var(--brown3)">Seleccionar destino...</div>
+        <div class="loc-option-check"></div>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="uni-btn">Unificar</button>
+    <div style="height:max(8px,env(safe-area-inset-bottom))"></div>
+  `,async mc=>{
+    mc.querySelectorAll('[data-exid]').forEach(el=>el.addEventListener('click',()=>{
+      const id=el.dataset.exid;
+      if(selIds.has(id)){selIds.delete(id);el.classList.remove('selected');}
+      else{selIds.add(id);el.classList.add('selected');}
+    }));
+    const ubics=await DB.getAll('ubicaciones');
+    mc.querySelector('#uni-hacia').addEventListener('click',()=>{
+      openModalLocPicker(ubics,null,(id,path)=>{
+        haciaId=id;
+        mc.querySelector('#uni-hacia').innerHTML=`<div class="loc-option-name">${path}</div><div class="loc-option-check" style="background:var(--gold);border-color:var(--gold)"><span style="width:6px;height:6px;border-radius:50%;background:#fff;display:block;margin:auto"></span></div>`;
+      });
+    });
+    mc.querySelector('#uni-btn').addEventListener('click',async()=>{
+      if(!haciaId||selIds.size<2){showToast('Seleccioná al menos 2 fuentes y un destino');return;}
+      const sel=paths.filter(e=>selIds.has(e.id));
+      const total=sel.reduce((a,e)=>a+e.cantidad,0);
+      for(const e of sel)await DB.delete('existencias',e.id);
+      const allEx=await DB.getAll('existencias');
+      let dest=allEx.find(e=>e.objetoId===obj.id&&e.ubicacionId===haciaId);
+      if(dest){dest.cantidad+=total;await DB.put('existencias',dest);}
+      else await DB.put('existencias',{id:uid(),objetoId:obj.id,ubicacionId:haciaId,cantidad:total,fechaAlta:Date.now(),fechaMovimiento:Date.now()});
+      await DB.put('movimientos',{id:uid(),objetoId:obj.id,desdeUbicacionId:null,haciaUbicacionId:haciaId,cantidad:total,tipoMovimiento:'unificar',detalle:'',fecha:Date.now()});
+      forceCloseModal();showToast(`Unificado: ${total} u. ✓`);
+      if(onDone)onDone();
+    });
+  });
+}
+
+// Editar objeto
+function openModalEditarObjeto(obj,onDone){
+  let tags=[...(obj.tags||[])];
+  openModal(`
+    <div class="modal-title">Editar objeto</div>
+    <div class="form-group">
+      <label class="form-label">Nombre</label>
+      <input id="eo-nombre" class="form-input" value="${obj.nombre}">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Tipo</label>
+        <select id="eo-tipo" class="form-select">${TIPOS.map(t=>`<option value="${t}"${obj.tipo===t?' selected':''}>${t.charAt(0).toUpperCase()+t.slice(1)}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tags</label>
+      <div class="tags-wrap" id="eo-tags-wrap"><input type="text" class="tag-input-hidden" id="eo-tag-input" placeholder="Agregar tag..."></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notas</label>
+      <input id="eo-notas" class="form-input" value="${obj.notas||''}">
+    </div>
+    <button class="btn btn-primary" id="eo-btn">Guardar cambios</button>
+    <div style="height:max(8px,env(safe-area-inset-bottom))"></div>
+  `,mc=>{
+    const wrap=mc.querySelector('#eo-tags-wrap');
+    const inp=mc.querySelector('#eo-tag-input');
+    const rt=()=>{
+      wrap.querySelectorAll('.tag-badge').forEach(x=>x.remove());
+      tags.forEach(t=>{const b=document.createElement('span');b.className='tag-badge';b.innerHTML=`${t}<span class="tag-remove" data-t="${t}">×</span>`;wrap.insertBefore(b,inp);});
+    };
+    rt();
+    inp.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===','||e.key===' ')&&inp.value.trim()){e.preventDefault();const t=inp.value.trim().replace(/,/g,'').toLowerCase();if(t&&!tags.includes(t)){tags.push(t);rt();}inp.value='';}});
+    wrap.addEventListener('click',e=>{if(e.target.classList.contains('tag-remove')){tags=tags.filter(t=>t!==e.target.dataset.t);rt();}});
+    mc.querySelector('#eo-btn').addEventListener('click',async()=>{
+      const nombre=mc.querySelector('#eo-nombre').value.trim();
+      if(!nombre){showToast('Escribí un nombre');return;}
+      obj.nombre=nombre;obj.tipo=mc.querySelector('#eo-tipo').value;obj.tags=tags;obj.notas=mc.querySelector('#eo-notas').value.trim();
+      await DB.put('objetos',obj);
+      forceCloseModal();showToast('Guardado ✓');if(onDone)onDone();
+    });
+  });
+}
+
+// Location picker
+function openModalLocPicker(ubics,parentId,onSelect){
+  const map={};ubics.forEach(u=>map[u.id]=u);
+  let trail=[];// IDs visited
+  let currentParent=parentId||null;
+
+  const renderLevel=(mc)=>{
+    const hijos=ubics.filter(u=>(u.parentId||null)===(currentParent||null));
+    const path=trail.map(id=>map[id]?.nombre||id).join(' › ');
+    mc.querySelector('#lp-content').innerHTML=`
+      ${trail.length?`<div class="breadcrumb" style="padding:8px 16px 4px">${path}</div>`:''}
+      <div class="loc-level">
+        <div class="loc-level-label">${currentParent?'Sectores / Sub-niveles':'Ambientes'}</div>
+        ${hijos.map(h=>{
+          const subs=ubics.filter(u=>u.parentId===h.id);
+          return`<div class="loc-option" data-id="${h.id}">
+            <div class="loc-option-name">${h.nombre}${subs.length?` (${subs.length} sub)`:''}
+              ${subs.length?`<span style="font-size:11px;color:var(--brown3);margin-left:6px">→ entrar</span>`:''}
+            </div>
+            <div class="loc-option-check"></div>
+          </div>`;
+        }).join('')}
+        ${hijos.length===0?`<div style="padding:16px;color:var(--brown3);font-size:13px">Sin ubicaciones aquí</div>`:''}
+      </div>
+      ${currentParent?`<button class="btn btn-primary" id="lp-select-here">Seleccionar este nivel</button>`:''}
+      <div style="height:max(8px,env(safe-area-inset-bottom))"></div>
+    `;
+    mc.querySelectorAll('.loc-option[data-id]').forEach(el=>{
+      el.addEventListener('click',async()=>{
+        const id=el.dataset.id;
+        const subs=ubics.filter(u=>u.parentId===id);
+        if(subs.length){
+          // Navigate into
+          trail.push(id);currentParent=id;renderLevel(mc);
+        } else {
+          // Select leaf
+          const chain=await getBreadcrumb(id);
+          const path=chain.map(u=>u.nombre).join(' › ');
+          forceCloseModal();
+          onSelect(id,path);
+        }
+      });
+    });
+    mc.querySelector('#lp-select-here')?.addEventListener('click',async()=>{
+      const id=currentParent;
+      const chain=await getBreadcrumb(id);
+      const p=chain.map(u=>u.nombre).join(' › ');
+      forceCloseModal();onSelect(id,p);
+    });
+  };
+
+  openModal(`
+    <div style="display:flex;align-items:center;gap:10px;padding:0 16px 12px">
+      <div id="lp-back-btn" style="cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center">${svgBack()}</div>
+      <div class="modal-title" style="padding:0;flex:1">Seleccionar ubicación</div>
+    </div>
+    <div id="lp-content"></div>
+  `,mc=>{
+    renderLevel(mc);
+    mc.querySelector('#lp-back-btn').addEventListener('click',()=>{
+      if(trail.length){trail.pop();currentParent=trail[trail.length-1]||null;renderLevel(mc);}
+      else forceCloseModal();
+    });
+  });
+}
+
+// ─────────────────────────────────────────────
+// BOTTOM NAV
+// ─────────────────────────────────────────────
+function renderBottomNav(active){
+  const items=[
+    {id:'dashboard',icon:'🏠',label:'Inicio'},
+    {id:'objetos',icon:'📦',label:'Objetos'},
+    {id:'buscar',icon:'🔍',label:'Buscar'},
+    {id:'recientes',icon:'🕓',label:'Recientes'}
+  ];
+  return`<nav class="bot-nav">${items.map(i=>`
+    <div class="nav-item${i.id===active?' active':''}" data-nav="${i.id}">
+      <div class="nav-icon">${i.icon}</div>
+      <div class="nav-label">${i.label}</div>
+    </div>`).join('')}</nav>`;
+}
+
+// ─────────────────────────────────────────────
+// EVENT DELEGATION
+// ─────────────────────────────────────────────
+function attachNavEvents(root){
+  root.querySelectorAll('[data-nav]').forEach(el=>{
+    el.style.cursor='pointer';
+    el.addEventListener('click',()=>{
+      const screen=el.dataset.nav;
+      const id=el.dataset.id;
+      let params=id?{id}:{};
+      if(el.dataset.params){try{Object.assign(params,JSON.parse(el.dataset.params));}catch(e){}}
+      Router.navigate(screen,params);
+    });
+  });
+  root.querySelectorAll('[data-back]').forEach(el=>{
+    el.addEventListener('click',()=>Router.back());
+  });
+}
+
+document.getElementById('app').addEventListener('click',e=>{
+  const nav=e.target.closest('[data-nav]');
+  if(nav&&!nav.closest('.modal')){
+    const screen=nav.dataset.nav;
+    const id=nav.dataset.id;
+    let params=id?{id}:{};
+    if(nav.dataset.params){try{Object.assign(params,JSON.parse(nav.dataset.params));}catch(err){}}
+    Router.navigate(screen,params);
+  }
+  const back=e.target.closest('[data-back]');
+  if(back&&!back.closest('.modal'))Router.back();
+});
+
+// ─────────────────────────────────────────────
+// DEMO DATA
+// ─────────────────────────────────────────────
+async function seedDemo(){
+  const existing=await DB.getAll('ubicaciones');
+  if(existing.length>0)return;
+
+  const u=(nombre,tipo,parentId)=>({id:uid(),nombre,tipo,parentId,orden:Date.now()});
+  const cocina=u('Cocina','ambiente',null); await DB.put('ubicaciones',cocina);
+  const alacena=u('Alacena','mueble',cocina.id); await DB.put('ubicaciones',alacena);
+  const estAlto=u('Estante alto','sector',alacena.id); await DB.put('ubicaciones',estAlto);
+  const estMed=u('Estante medio','sector',alacena.id); await DB.put('ubicaciones',estMed);
+  const bajomesada=u('Bajo mesada','mueble',cocina.id); await DB.put('ubicaciones',bajomesada);
+  const dorm=u('Dormitorio','ambiente',null); await DB.put('ubicaciones',dorm);
+  const chifo=u('Chifonier','mueble',dorm.id); await DB.put('ubicaciones',chifo);
+  const caj1=u('Cajón 1','sector',chifo.id); await DB.put('ubicaciones',caj1);
+  const caj2=u('Cajón 2','sector',chifo.id); await DB.put('ubicaciones',caj2);
+  const caj3=u('Cajón 3','sector',chifo.id); await DB.put('ubicaciones',caj3);
+  const placard=u('Placard','mueble',dorm.id); await DB.put('ubicaciones',placard);
+  const banio=u('Baño','ambiente',null); await DB.put('ubicaciones',banio);
+  const botiquin=u('Botiquín','mueble',banio.id); await DB.put('ubicaciones',botiquin);
+  const taller=u('Taller','ambiente',null); await DB.put('ubicaciones',taller);
+  const modular=u('Modular','mueble',taller.id); await DB.put('ubicaciones',modular);
+  const cajMod=u('Cajón','sector',modular.id); await DB.put('ubicaciones',cajMod);
+
+  const addObj=async(nombre,tipo,tags,distribs)=>{
+    const obj={id:uid(),nombre,tipo,tags,foto:null,notas:'',activo:true,fechaAlta:Date.now()-Math.random()*1e7};
+    await DB.put('objetos',obj);
+    for(const [ubicId,qty] of distribs){
+      await DB.put('existencias',{id:uid(),objetoId:obj.id,ubicacionId:ubicId,cantidad:qty,fechaAlta:Date.now(),fechaMovimiento:Date.now()});
+      await DB.put('movimientos',{id:uid(),objetoId:obj.id,desdeUbicacionId:null,haciaUbicacionId:ubicId,cantidad:qty,tipoMovimiento:'alta_inicial',detalle:nombre,fecha:Date.now()-Math.random()*5e6});
+    }
+  };
+
+  await addObj('Tornillos varios','general',['herramientas','repuesto'],[[caj3.id,20],[cajMod.id,35]]);
+  await addObj('Arroz','alimento',['cocina'],[[estMed.id,2]]);
+  await addObj('Sal','alimento',['cocina'],[[estMed.id,1]]);
+  await addObj('Latas de conserva','alimento',['cocina'],[[estAlto.id,6]]);
+  await addObj('Lavandina','limpieza',[],[[bajomesada.id,2]]);
+  await addObj('Detergente','limpieza',[],[[bajomesada.id,1]]);
+  await addObj('Pilas AA','general',['electrónica'],[[caj1.id,8],[botiquin.id,4]]);
+  await addObj('Shampoo','higiene',[],[[botiquin.id,2]]);
+  await addObj('Toallas','higiene',['baño'],[[placard.id,4]]);
+  await addObj('Cables USB','general',['electrónica'],[[caj2.id,3]]);
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+async function init(){
+  await DB.open();
+  await seedDemo();
+  Router.navigate('splash',{});
+}
+
+
+window.addEventListener('error', e => {
+  console.error('Error global:', e.error || e.message);
+});
+
+window.addEventListener('unhandledrejection', e => {
+  console.error('Promise rechazada:', e.reason);
+});
+
+init();
+</script>
+</body>
+</html>
