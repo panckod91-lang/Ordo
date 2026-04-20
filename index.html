@@ -7,6 +7,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#EDE9E2">
 <title>Ordo</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icons/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<meta name="theme-color" content="#EDE9E2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
@@ -102,10 +106,10 @@ body{font-family:var(--sans);color:var(--brown);font-size:15px;line-height:1.5}
 .stat-box{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px 12px}
 .stat-num{font-family:var(--serif);font-size:24px;font-weight:700;color:var(--brown);line-height:1}
 .stat-lab{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--brown2);margin-top:8px}
-.settings-btn,.search-btn{width:24px;height:24px;background:transparent;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;box-shadow:none}
-.settings-btn svg,.search-btn svg{width:17px;height:17px;stroke:var(--brown2);opacity:.88}
-.top-actions{display:flex;gap:10px;align-items:center;padding-top:2px}
-.search-btn:active,.settings-btn:active{opacity:.6;transform:scale(.94)}
+.settings-btn,.search-btn{width:34px;height:34px;border-radius:50%;background:rgba(245,241,234,.82);border:1px solid rgba(58,30,12,.08);display:flex;align-items:center;justify-content:center;box-shadow:0 1px 6px rgba(58,30,12,.06);cursor:pointer;backdrop-filter:blur(6px)}
+.settings-btn svg,.search-btn svg{width:16px;height:16px;stroke:var(--brown2);opacity:.92}
+.top-actions{display:flex;gap:8px;align-items:flex-start;padding-top:2px}
+.search-btn:active,.settings-btn:active{opacity:.72;transform:scale(.96)}
 .primary-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px}
 .primary-card{background:var(--card);border:1px solid var(--border);border-radius:24px;min-height:156px;padding:18px 16px;box-shadow:var(--shadow);cursor:pointer;display:flex;flex-direction:column;justify-content:space-between}
 .primary-card.dark{background:var(--brown);border-color:var(--brown)}
@@ -139,6 +143,7 @@ body{font-family:var(--sans);color:var(--brown);font-size:15px;line-height:1.5}
 
 /* FAB */
 .fab{position:fixed;right:20px;bottom:max(84px,calc(74px + env(safe-area-inset-bottom)));width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(184,136,42,.45);cursor:pointer;z-index:50;transition:transform .15s,box-shadow .15s;border:none}
+.fab.hide{display:none}
 .fab:active{transform:scale(.92);box-shadow:0 2px 8px rgba(184,136,42,.3)}
 .fab svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 
@@ -544,7 +549,6 @@ SCREENS.dashboard = async(el,p)=>{
         </div>
       </div>
     </div>
-    <button class="fab" data-nav="alta" data-params='{"modo":"libre"}'>${svgPlus()}</button>
     ${renderBottomNav('dashboard')}`;
 
   attachNavEvents(el);
@@ -1568,6 +1572,7 @@ SCREENS.settings = async(el,p)=>{
       <div class="hdr-title">Ajustes</div>
     </div>
     <div class="content no-pad">
+      
       <div class="settings-section-title">Datos</div>
 
       <div class="settings-item" id="st-export-json">
@@ -1575,6 +1580,15 @@ SCREENS.settings = async(el,p)=>{
         <div class="settings-item-main">
           <div class="settings-item-title">Exportar JSON</div>
           <div class="settings-item-sub">Backup completo de todos los datos</div>
+        </div>
+        <div class="settings-item-arrow">›</div>
+      </div>
+
+      <div class="settings-item" id="st-import-json">
+        <div class="settings-item-icon">📤</div>
+        <div class="settings-item-main">
+          <div class="settings-item-title">Importar JSON</div>
+          <div class="settings-item-sub">Restaurar backup completo</div>
         </div>
         <div class="settings-item-arrow">›</div>
       </div>
@@ -1598,6 +1612,7 @@ SCREENS.settings = async(el,p)=>{
       </div>
 
       <div class="settings-section-title">Diagnóstico</div>
+
 
       <div class="settings-item">
         <div class="settings-item-icon">📦</div>
@@ -1625,15 +1640,6 @@ SCREENS.settings = async(el,p)=>{
 
       <div class="settings-section-title">Zona de peligro</div>
 
-      <div class="settings-item" id="st-reset-demo">
-        <div class="settings-item-icon">🧹</div>
-        <div class="settings-item-main">
-          <div class="settings-item-title">Borrar datos demo</div>
-          <div class="settings-item-sub">Elimina los datos de ejemplo precargados</div>
-        </div>
-        <div class="settings-item-arrow">›</div>
-      </div>
-
       <div class="settings-item" id="st-clear-all">
         <div class="settings-item-icon">💥</div>
         <div class="settings-item-main">
@@ -1649,14 +1655,8 @@ SCREENS.settings = async(el,p)=>{
 
   el.querySelector('#st-export-json').addEventListener('click', exportJSONFile);
   el.querySelector('#st-export-csv').addEventListener('click', exportCSVFile);
-  el.querySelector('#st-import-csv').addEventListener('click', ()=>showToast('Import CSV todavía no está conectado'));
-  el.querySelector('#st-reset-demo').addEventListener('click', async()=>{
-    if(!confirm('¿Recrear demo?')) return;
-    await clearAllData();
-    await seedDemo();
-    showToast('Demo reiniciada ✓');
-    Router.navigate('settings');
-  });
+  el.querySelector('#st-import-csv').addEventListener('click', triggerCSVImport);
+  el.querySelector('#st-import-json').addEventListener('click', triggerJSONImport);
   el.querySelector('#st-clear-all').addEventListener('click', async()=>{
     if(!confirm('¿Borrar todos los datos?')) return;
     await clearAllData();
@@ -1710,6 +1710,10 @@ document.getElementById('app').addEventListener('click',e=>{
     const id=nav.dataset.id;
     let params=id?{id}:{};
     if(nav.dataset.params){try{Object.assign(params,JSON.parse(nav.dataset.params));}catch(err){}}
+    if(screen==='dashboard'){
+      document.querySelectorAll('.screen').forEach((s,i)=>{ if(i>0 || s.id!=='screen-dashboard') s.remove(); });
+      Router.stack = [];
+    }
     Router.navigate(screen,params);
   }
   const back=e.target.closest('[data-back]');
@@ -1773,6 +1777,175 @@ async function init(){
 
 window.addEventListener('error', e => console.error('Error global:', e.error || e.message));
 window.addEventListener('unhandledrejection', e => console.error('Promise rechazada:', e.reason));
+
+async function importCSVText(csvText){
+  const lines = csvText.replace(/\r/g,'').split('\n').filter(l=>l.trim());
+  if(lines.length < 2) throw new Error('CSV vacío o inválido');
+
+  function parseLine(line){
+    const out = [];
+    let cur = '';
+    let quoted = false;
+    for(let i=0;i<line.length;i++){
+      const ch = line[i];
+      if(ch === '"'){
+        if(quoted && line[i+1] === '"'){ cur += '"'; i++; }
+        else quoted = !quoted;
+      } else if(ch === ',' && !quoted){
+        out.push(cur); cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    out.push(cur);
+    return out.map(v=>v.trim());
+  }
+
+  const header = parseLine(lines[0]).map(h=>h.toLowerCase().replace(/^"|"$/g,'').trim());
+  const idx = {
+    objeto: header.indexOf('objeto'),
+    cantidad: header.indexOf('cantidad'),
+    tipo: header.indexOf('tipo'),
+    ubicacion: header.indexOf('ubicacion'),
+    tags: header.indexOf('tags')
+  };
+
+  if(idx.objeto === -1 || idx.cantidad === -1 || idx.ubicacion === -1){
+    throw new Error('El CSV debe tener al menos: objeto, cantidad, ubicacion');
+  }
+
+  let ubicaciones = await DB.getAll('ubicaciones');
+  let objetos = await DB.getAll('objetos');
+  let existencias = await DB.getAll('existencias');
+
+  const findOrCreateLocationPath = async(pathStr) => {
+    const parts = pathStr.split('›').map(s=>s.trim()).filter(Boolean);
+    let parentId = null;
+    let current = null;
+    for(let i=0;i<parts.length;i++){
+      const nombre = parts[i];
+      current = ubicaciones.find(u => (u.parentId||null) === parentId && u.nombre.toLowerCase() === nombre.toLowerCase());
+      if(!current){
+        let tipo = 'sector';
+        if(i===0) tipo='ambiente';
+        else if(i===1) tipo='mueble';
+        current = {id:uid(), nombre, tipo, parentId, orden:Date.now()};
+        await DB.put('ubicaciones', current);
+        ubicaciones.push(current);
+      }
+      parentId = current.id;
+    }
+    return current ? current.id : null;
+  };
+
+  let imported = 0;
+  for(let i=1;i<lines.length;i++){
+    const cols = parseLine(lines[i]).map(v => v.replace(/^"|"$/g,''));
+    const nombre = (cols[idx.objeto] || '').trim();
+    const cantidad = parseInt((cols[idx.cantidad] || '0').trim(), 10);
+    const tipo = idx.tipo >= 0 ? ((cols[idx.tipo] || 'general').trim().toLowerCase() || 'general') : 'general';
+    const ubicacionPath = (cols[idx.ubicacion] || '').trim();
+    const tags = idx.tags >= 0 ? ((cols[idx.tags] || '').split('|').map(t=>t.trim()).filter(Boolean)) : [];
+
+    if(!nombre || !cantidad || !ubicacionPath) continue;
+
+    const ubicacionId = await findOrCreateLocationPath(ubicacionPath);
+    if(!ubicacionId) continue;
+
+    let obj = objetos.find(o => o.activo && o.nombre.toLowerCase() === nombre.toLowerCase());
+    if(!obj){
+      obj = {id:uid(), nombre, tipo, tags, foto:null, notas:'', activo:true, fechaAlta:Date.now()};
+      await DB.put('objetos', obj);
+      objetos.push(obj);
+    }
+
+    let ex = existencias.find(e => e.objetoId === obj.id && e.ubicacionId === ubicacionId);
+    if(ex){
+      ex.cantidad += cantidad;
+      ex.fechaMovimiento = Date.now();
+      await DB.put('existencias', ex);
+    }else{
+      ex = {id:uid(), objetoId:obj.id, ubicacionId, cantidad, fechaAlta:Date.now(), fechaMovimiento:Date.now()};
+      await DB.put('existencias', ex);
+      existencias.push(ex);
+    }
+
+    await DB.put('movimientos',{
+      id:uid(),
+      objetoId:obj.id,
+      desdeUbicacionId:null,
+      haciaUbicacionId:ubicacionId,
+      cantidad,
+      tipoMovimiento:'import_csv',
+      detalle:'Import CSV',
+      fecha:Date.now()
+    });
+
+    imported++;
+  }
+
+  return imported;
+}
+
+
+function triggerJSONImport(){
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,application/json';
+  input.addEventListener('change', async(e)=>{
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    try{
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      if(!confirm('Esto va a REEMPLAZAR todos los datos actuales. ¿Continuar?')) return;
+
+      await clearAllData();
+
+      if(data.ubicaciones) for(const u of data.ubicaciones) await DB.put('ubicaciones', u);
+      if(data.objetos) for(const o of data.objetos) await DB.put('objetos', o);
+      if(data.existencias) for(const ex of data.existencias) await DB.put('existencias', ex);
+      if(data.movimientos) for(const m of data.movimientos) await DB.put('movimientos', m);
+
+      showToast('Backup restaurado ✓');
+      Router.navigate('dashboard');
+    }catch(err){
+      console.error(err);
+      alert('Error al importar JSON');
+    }
+  });
+  input.click();
+}
+
+function triggerCSVImport(){
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.csv,text/csv';
+  input.addEventListener('change', async(e)=>{
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    try{
+      const text = await file.text();
+      const count = await importCSVText(text);
+      showToast(`Importados ${count} registros ✓`);
+      Router.navigate('settings');
+    }catch(err){
+      console.error(err);
+      alert('Error al importar CSV: ' + (err.message || err));
+    }
+  });
+  input.click();
+}
+
+
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW error', err));
+  });
+}
+
 init();
 </script>
 </body>
